@@ -5,19 +5,48 @@ using Test
 using AmbiguitySets:
     AmbiguitySet,
     UncertaintySet,
-    Bertsimas
+    Bertsimas,
+    BenTal,
+    Delague,
+    distribution
 
 
 @testset "AmbiguitySets.jl" begin
+    # Mostly just some simple constructor tests
     @testset "Bertsimas" begin
-        # Really simple construction tests
-        s = Bertsimas(MvNormal(4, 0.25), [0.1, 0.4, 0.2, 0.01], 3.0)
+        s = Bertsimas(MvNormal(10, 0.25); uncertainty=fill(0.05, 10), budget=1.0)
 
         @test isa(s, Sampleable)
         @test isa(s, AmbiguitySet)
         @test isa(s, UncertaintySet)
+        @test distribution(s) == MvNormal(10, 0.25)
+        @test s == Bertsimas(MvNormal(10, 0.25))
+    end
 
-        s2 = Bertsimas(MvNormal(10, 0.25); uncertainty=fill(0.05, 10), budget=1.0)
-        @test s2 == Bertsimas(MvNormal(10, 0.25))
+    @testset "BenTal" begin
+        s = BenTal(MvNormal(10, 0.25); uncertainty=0.05)
+
+        @test isa(s, Sampleable)
+        @test isa(s, AmbiguitySet)
+        @test isa(s, UncertaintySet)
+        @test distribution(s) == MvNormal(10, 0.25)
+        @test s == BenTal(MvNormal(10, 0.25))
+    end
+
+    @testset "Delague" begin
+        # Really simple construction tests
+        s = Delague(
+            MvNormal(10, 0.25);
+            γ1=0.05,
+            γ2=3.0,
+            coefficients=[1.0],
+            intercepts=[0.0],
+        )
+
+        @test isa(s, Sampleable)
+        @test isa(s, AmbiguitySet)
+        @test !isa(s, UncertaintySet)
+        @test distribution(s) == MvNormal(10, 0.25)
+        @test s == Delague(MvNormal(10, 0.25))
     end
 end
