@@ -18,6 +18,10 @@ abstract type AmbiguitySet{F<:Multivariate, S<:Continuous, D<:Sampleable{F, S}} 
 
 Base.rand(s::AmbiguitySet) = rand(distribution(s))
 
+# NOTE: Technically we could probably implement `rand` for `Bertsimas` and `BenTal` by
+# uniformly augmenting the samples from the underlying MvNormal with the uncertainty
+# estimate. I don't think anything like that would be possible for Delague though.
+
 """
     UncertaintySet <: AmbiguitySet
 
@@ -113,5 +117,7 @@ function Delague(
 end
 
 distribution(s::Delague) = s.dist
+
+# NOTE: The Betina formulation doesn't use ambiguity sets?
 
 end
