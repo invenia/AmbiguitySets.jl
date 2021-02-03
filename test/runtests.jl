@@ -4,7 +4,6 @@ using Test
 
 using AmbiguitySets:
     AmbiguitySet,
-    UncertaintySet,
     Bertsimas,
     BenTal,
     Delague,
@@ -18,7 +17,6 @@ using AmbiguitySets:
 
         @test isa(s, Sampleable)
         @test isa(s, AmbiguitySet)
-        @test isa(s, UncertaintySet)
         @test distribution(s) == MvNormal(10, 0.25)
         @test s == Bertsimas(MvNormal(10, 0.25))
     end
@@ -28,7 +26,6 @@ using AmbiguitySets:
 
         @test isa(s, Sampleable)
         @test isa(s, AmbiguitySet)
-        @test isa(s, UncertaintySet)
         @test distribution(s) == MvNormal(10, 0.25)
         @test s == BenTal(MvNormal(10, 0.25))
     end
@@ -45,7 +42,6 @@ using AmbiguitySets:
 
         @test isa(s, Sampleable)
         @test isa(s, AmbiguitySet)
-        @test !isa(s, UncertaintySet)
         @test distribution(s) == MvNormal(10, 0.25)
         @test s == Delague(MvNormal(10, 0.25))
     end

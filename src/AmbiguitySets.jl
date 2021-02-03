@@ -14,23 +14,13 @@ It represents a bounded infinite set of distributions.
 For more information on how `AmbiguitySet`s are used for RO and DRO, please review
 the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/PortfolioOptimization.jl/).
 """
-abstract type AmbiguitySet{F<:Multivariate, S<:Continuous, D<:Sampleable{F, S}} <: Sampleable{F, S} end
+abstract type AmbiguitySet{T<:Real, D<:Sampleable{Multivariate, Continuous}} <: Sampleable{Multivariate, Continuous} end
 
 Base.rand(s::AmbiguitySet) = rand(distribution(s))
 
 # NOTE: Technically we could probably implement `rand` for `Bertsimas` and `BenTal` by
 # uniformly augmenting the samples from the underlying MvNormal with the uncertainty
 # estimate. I don't think anything like that would be possible for Delague though.
-
-"""
-    UncertaintySet <: AmbiguitySet
-
-The supertype of all Uncertainty Sets. This is the class of purelly robust Ambiguity Sets.
-The uncertainty set bounds the values which the random vector can assume.
-
-NOTE: I'm not entire clear if this is a necessary subtype
-"""
-abstract type UncertaintySet{F<:Multivariate, S<:Continuous, D<:Sampleable{F, S}} <: AmbiguitySet{F, S, D} end
 
 """
     Bertsimas <: UncertaintySet
@@ -43,10 +33,10 @@ Atributes:
 For more information on how Bertsimas' uncertainty sets are used for RO, please review
 the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/PortfolioOptimization.jl/).
 """
-struct Bertsimas{F<:Multivariate, S<:Continuous, D<:Sampleable{F, S}} <: UncertaintySet{F, S, D}
+struct Bertsimas{T<:Real, D<:Sampleable} <: AmbiguitySet{T, D}
     dist::D
-    uncertainty::Vector{Float64}
-    budget::Float64
+    uncertainty::Vector{T}
+    budget::T
 end
 
 # Not sure about these defaults, but it seems like something we should support?
@@ -73,9 +63,9 @@ Atributes:
 For more information on how BenTal uncertainty sets are used for RO, please review
 the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/PortfolioOptimization.jl/).
 """
-struct BenTal{F<:Multivariate, S<:Continuous, D<:Sampleable{F, S}} <: UncertaintySet{F, S, D}
+struct BenTal{T<:Real, D<:Sampleable} <: AmbiguitySet{T, D}
     dist::D
-    uncertainty::Float64
+    uncertainty::T
 end
 
 default_ben_tal_uncertainty(d::AbstractMvNormal) = first(sqrt.(diag(cov(d))) ./ 5)
@@ -99,12 +89,12 @@ Atributes:
 For more information on how BenTal uncertainty sets are used for RO, please review
 the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/PortfolioOptimization.jl/).
 """
-struct Delague{F<:Multivariate, S<:Continuous, D<:Sampleable{F, S}} <: AmbiguitySet{F, S, D}
+struct Delague{T<:Real, D<:Sampleable} <: AmbiguitySet{T, D}
     dist::D
-    γ1::Float64
-    γ2::Float64
-    coefficients::Vector{Float64}
-    intercepts::Vector{Float64}
+    γ1::T
+    γ2::T
+    coefficients::Vector{T}
+    intercepts::Vector{T}
 end
 
 default_delague_γ1(d::AbstractMvNormal) = first(sqrt.(diag(cov(d))) ./ 5)
