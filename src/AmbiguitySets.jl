@@ -3,6 +3,8 @@ module AmbiguitySets
 using Distributions
 using LinearAlgebra
 
+export AmbiguitySet, BertsimasSet, BenTalSet, DelagueSet
+
 
 """
     AmbiguitySet <: Sampleable
@@ -23,7 +25,7 @@ Base.rand(s::AmbiguitySet) = rand(distribution(s))
 # estimate. I don't think anything like that would be possible for Delague though.
 
 """
-    Bertsimas <: AmbiguitySet
+    BertsimasSet <: AmbiguitySet
 
 ```math
 \\left\\{ \\mu \\; \\middle| \\begin{array}{ll}
@@ -47,13 +49,13 @@ References:
 For more information on how Bertsimas' uncertainty sets are used for RO, please review
 the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/PortfolioOptimization.jl/).
 """
-struct Bertsimas{T<:Real, D<:Sampleable} <: AmbiguitySet{T, D}
+struct BertsimasSet{T<:Real, D<:Sampleable} <: AmbiguitySet{T, D}
     d::D
     Δ::Vector{T}
     Γ::T
 
     # Inner constructor for validating arguments
-    function Bertsimas{T, D}(d::D, Δ::Vector{T}, Γ::T) where {T<:Real, D<:Sampleable}
+    function BertsimasSet{T, D}(d::D, Δ::Vector{T}, Γ::T) where {T<:Real, D<:Sampleable}
         length(d) == length(Δ) || throw(ArgumentError(
             "Distribution ($(length(d))) and Δ ($(length(d))) are not the same length"
         ))
@@ -63,25 +65,25 @@ struct Bertsimas{T<:Real, D<:Sampleable} <: AmbiguitySet{T, D}
 end
 
 # Default outer constructor
-Bertsimas(d::D, Δ::Vector{T}, Γ::T) where {T<:Real, D<:Sampleable} = Bertsimas{T, D}(d, Δ, Γ)
+BertsimasSet(d::D, Δ::Vector{T}, Γ::T) where {T<:Real, D<:Sampleable} = BertsimasSet{T, D}(d, Δ, Γ)
 
 # Kwarg constructor with defaults
-function Bertsimas(
+function BertsimasSet(
     d::AbstractMvNormal;
     Δ=default_bertsimas_delta(d),
     Γ=default_bertsimas_budget(d),
 )
-    return Bertsimas(d, Δ, Γ)
+    return BertsimasSet(d, Δ, Γ)
 end
 
 # Not sure about these defaults, but it seems like something we should support?
 default_bertsimas_delta(d::AbstractMvNormal) = sqrt.(var(d)) ./ 5
 default_bertsimas_budget(d::Sampleable{Multivariate}) = 0.1 * length(d)
 
-distribution(s::Bertsimas) = s.d
+distribution(s::BertsimasSet) = s.d
 
 """
-    BenTal <: AmbiguitySet
+    BenTalSet <: AmbiguitySet
 
 ```math
 \\left\\{ \\mu \\; \\middle| \\begin{array}{ll}
@@ -100,29 +102,29 @@ References:
 For more information on how BenTal uncertainty sets are used for RO, please review
 the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/PortfolioOptimization.jl/).
 """
-struct BenTal{T<:Real, D<:Sampleable} <: AmbiguitySet{T, D}
+struct BenTalSet{T<:Real, D<:Sampleable} <: AmbiguitySet{T, D}
     d::D
     Δ::T
 
     # Inner constructor for validating arguments
-    function BenTal{T, D}(d::D, Δ::T) where {T<:Real, D<:Sampleable}
+    function BenTalSet{T, D}(d::D, Δ::T) where {T<:Real, D<:Sampleable}
         Δ >= 0 || throw(ArgumentError("Uncertainty delta must be >= 0"))
         return new{T, D}(d, Δ)
     end
 end
 
 # Default outer constructor
-BenTal(d::D, Δ::T) where {T<:Real, D<:Sampleable} = BenTal{T, D}(d, Δ)
+BenTalSet(d::D, Δ::T) where {T<:Real, D<:Sampleable} = BenTalSet{T, D}(d, Δ)
 
 # Kwarg constructor with default delta value
-BenTal(d::AbstractMvNormal; Δ=default_ben_tal_delta(d)) = BenTal(d, Δ)
+BenTalSet(d::AbstractMvNormal; Δ=default_ben_tal_delta(d)) = BenTalSet(d, Δ)
 
 default_ben_tal_delta(d::AbstractMvNormal) = first(sqrt.(var(d)) ./ 5)
 
-distribution(s::BenTal) = s.d
+distribution(s::BenTalSet) = s.d
 
 """
-    Delague <: AmbiguitySet
+    DelagueSet <: AmbiguitySet
 
 ```math
 \\left\\{ r  \\; \\middle| \\begin{array}{ll}
@@ -145,7 +147,7 @@ References:
 For more information on how BenTal uncertainty sets are used for RO, please review
 the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/PortfolioOptimization.jl/).
 """
-struct Delague{T<:Real, D<:Sampleable} <: AmbiguitySet{T, D}
+struct DelagueSet{T<:Real, D<:Sampleable} <: AmbiguitySet{T, D}
     d::D
     γ1::T
     γ2::T
@@ -153,7 +155,7 @@ struct Delague{T<:Real, D<:Sampleable} <: AmbiguitySet{T, D}
     intercepts::Vector{T}
 
     # Inner constructor for validating arguments
-    function Delague{T, D}(
+    function DelagueSet{T, D}(
         d::D, γ1::T, γ2::T, coefficients::Vector{T}, intercepts::Vector{T}
     ) where {T<:Real, D<:Sampleable}
         length(coefficients) == length(intercepts) || throw(ArgumentError(
@@ -167,23 +169,23 @@ struct Delague{T<:Real, D<:Sampleable} <: AmbiguitySet{T, D}
 end
 
 # Default outer constructor
-function Delague(
+function DelagueSet(
     d::D, γ1::T, γ2::T, coefficients::Vector{T}, intercepts::Vector{T}
 ) where {T<:Real, D<:Sampleable}
-    Delague{T, D}(d, γ1, γ2, coefficients, intercepts)
+    DelagueSet{T, D}(d, γ1, γ2, coefficients, intercepts)
 end
 
 # Kwarg constructor with defaults
-function Delague(
+function DelagueSet(
     d::AbstractMvNormal;
     γ1=default_delague_γ1(d), γ2=3.0, coefficients=[1.0], intercepts=[0.0],
 )
-    return Delague(d, γ1, γ2, coefficients, intercepts)
+    return DelagueSet(d, γ1, γ2, coefficients, intercepts)
 end
 
 default_delague_γ1(d::AbstractMvNormal) = first(sqrt.(diag(cov(d))) ./ 5)
 
-distribution(s::Delague) = s.d
+distribution(s::DelagueSet) = s.d
 
 # NOTE: The Betina formulation doesn't use ambiguity sets?
 

@@ -8,9 +8,9 @@ A minimal package of ambiguity set type definitions for use in
 
 ## Implemented Types
 
-- `Bertsimas`
-- `BenTal`
-- `Delague`
+- `BertsimasSet`
+- `BenTalSet`
+- `DelagueSet`
 
 ## FAQ
 
