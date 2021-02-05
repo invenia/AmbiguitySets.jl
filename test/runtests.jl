@@ -1,5 +1,6 @@
 using AmbiguitySets
 using Distributions
+using Random
 using Test
 
 using AmbiguitySets:
@@ -14,6 +15,8 @@ using AmbiguitySets:
     @testset "BertsimasSet" begin
         s = BertsimasSet(MvNormal(10, 0.25); Δ=fill(0.05, 10), Γ=1.0)
 
+        @test length(s) == 10
+        @test rand(MersenneTwister(123), s) == rand(MersenneTwister(123), distribution(s))
         @test isa(s, Sampleable)
         @test isa(s, AmbiguitySet)
         @test distribution(s) == MvNormal(10, 0.25)
@@ -32,6 +35,8 @@ using AmbiguitySets:
     @testset "BenTalSet" begin
         s = BenTalSet(MvNormal(10, 0.25); Δ=0.025)
 
+        @test length(s) == 10
+        @test rand(MersenneTwister(123), s) == rand(MersenneTwister(123), distribution(s))
         @test isa(s, Sampleable)
         @test isa(s, AmbiguitySet)
         @test distribution(s) == MvNormal(10, 0.25)
@@ -50,6 +55,8 @@ using AmbiguitySets:
             intercepts=[0.0],
         )
 
+        @test length(s) == 10
+        @test rand(MersenneTwister(123), s) == rand(MersenneTwister(123), distribution(s))
         @test isa(s, Sampleable)
         @test isa(s, AmbiguitySet)
         @test distribution(s) == MvNormal(10, 0.25)

@@ -2,9 +2,11 @@ module AmbiguitySets
 
 using Distributions
 using LinearAlgebra
+using Random
 
 export AmbiguitySet, BertsimasSet, BenTalSet, DelagueSet
 
+const ContinuousMultivariateSampleable = Sampleable{Multivariate, Continuous}
 
 """
     AmbiguitySet <: Sampleable
@@ -16,9 +18,15 @@ It represents a bounded infinite set of distributions.
 For more information on how `AmbiguitySet`s are used for RO and DRO, please review
 the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/PortfolioOptimization.jl/).
 """
-abstract type AmbiguitySet{T<:Real, D<:Sampleable{Multivariate, Continuous}} <: Sampleable{Multivariate, Continuous} end
+abstract type AmbiguitySet{T<:Real, D<:ContinuousMultivariateSampleable} <: ContinuousMultivariateSampleable end
 
-Base.rand(s::AmbiguitySet) = rand(distribution(s))
+Base.length(s::AmbiguitySet) = length(distribution(s))
+
+function Distributions._rand!(
+    rng::AbstractRNG, s::AmbiguitySet{T}, x::AbstractVector{T}
+) where {T<:Real}
+    return rand!(rng, distribution(s), x)
+end
 
 # NOTE: Technically we could probably implement `rand` for `Bertsimas` and `BenTal` by
 # uniformly augmenting the samples from the underlying MvNormal with the uncertainty
@@ -49,13 +57,13 @@ References:
 For more information on how Bertsimas' uncertainty sets are used for RO, please review
 the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/PortfolioOptimization.jl/).
 """
-struct BertsimasSet{T<:Real, D<:Sampleable} <: AmbiguitySet{T, D}
+struct BertsimasSet{T<:Real, D<:ContinuousMultivariateSampleable} <: AmbiguitySet{T, D}
     d::D
     Δ::Vector{T}
     Γ::T
 
     # Inner constructor for validating arguments
-    function BertsimasSet{T, D}(d::D, Δ::Vector{T}, Γ::T) where {T<:Real, D<:Sampleable}
+    function BertsimasSet{T, D}(d::D, Δ::Vector{T}, Γ::T) where {T<:Real, D<:ContinuousMultivariateSampleable}
         length(d) == length(Δ) || throw(ArgumentError(
             "Distribution ($(length(d))) and Δ ($(length(d))) are not the same length"
         ))
@@ -67,7 +75,7 @@ struct BertsimasSet{T<:Real, D<:Sampleable} <: AmbiguitySet{T, D}
 end
 
 # Default outer constructor
-BertsimasSet(d::D, Δ::Vector{T}, Γ::T) where {T<:Real, D<:Sampleable} = BertsimasSet{T, D}(d, Δ, Γ)
+BertsimasSet(d::D, Δ::Vector{T}, Γ::T) where {T<:Real, D<:ContinuousMultivariateSampleable} = BertsimasSet{T, D}(d, Δ, Γ)
 
 # Kwarg constructor with defaults
 function BertsimasSet(
@@ -80,7 +88,7 @@ end
 
 # Not sure about these defaults, but it seems like something we should support?
 default_bertsimas_delta(d::AbstractMvNormal) = sqrt.(var(d)) ./ 5
-default_bertsimas_budget(d::Sampleable{Multivariate}) = 0.1 * length(d)
+default_bertsimas_budget(d::Sampleable) = 0.1 * length(d)
 
 distribution(s::BertsimasSet) = s.d
 
@@ -104,19 +112,19 @@ References:
 For more information on how BenTal uncertainty sets are used for RO, please review
 the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/PortfolioOptimization.jl/).
 """
-struct BenTalSet{T<:Real, D<:Sampleable} <: AmbiguitySet{T, D}
+struct BenTalSet{T<:Real, D<:ContinuousMultivariateSampleable} <: AmbiguitySet{T, D}
     d::D
     Δ::T
 
     # Inner constructor for validating arguments
-    function BenTalSet{T, D}(d::D, Δ::T) where {T<:Real, D<:Sampleable}
+    function BenTalSet{T, D}(d::D, Δ::T) where {T<:Real, D<:ContinuousMultivariateSampleable}
         Δ >= 0 || throw(ArgumentError("Uncertainty delta must be >= 0"))
         return new{T, D}(d, Δ)
     end
 end
 
 # Default outer constructor
-BenTalSet(d::D, Δ::T) where {T<:Real, D<:Sampleable} = BenTalSet{T, D}(d, Δ)
+BenTalSet(d::D, Δ::T) where {T<:Real, D<:ContinuousMultivariateSampleable} = BenTalSet{T, D}(d, Δ)
 
 # Kwarg constructor with default delta value
 BenTalSet(d::AbstractMvNormal; Δ=0.025) = BenTalSet(d, Δ)
@@ -147,7 +155,7 @@ References:
 For more information on how BenTal uncertainty sets are used for RO, please review
 the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/PortfolioOptimization.jl/).
 """
-struct DelagueSet{T<:Real, D<:Sampleable} <: AmbiguitySet{T, D}
+struct DelagueSet{T<:Real, D<:ContinuousMultivariateSampleable} <: AmbiguitySet{T, D}
     d::D
     γ1::T
     γ2::T
@@ -157,7 +165,7 @@ struct DelagueSet{T<:Real, D<:Sampleable} <: AmbiguitySet{T, D}
     # Inner constructor for validating arguments
     function DelagueSet{T, D}(
         d::D, γ1::T, γ2::T, coefficients::Vector{T}, intercepts::Vector{T}
-    ) where {T<:Real, D<:Sampleable}
+    ) where {T<:Real, D<:ContinuousMultivariateSampleable}
         length(coefficients) == length(intercepts) || throw(ArgumentError(
             "Length of coefficients ($(length(coefficients))) and intercepts " *
             "($(length(intercepts))) do not match"
@@ -171,7 +179,7 @@ end
 # Default outer constructor
 function DelagueSet(
     d::D, γ1::T, γ2::T, coefficients::Vector{T}, intercepts::Vector{T}
-) where {T<:Real, D<:Sampleable}
+) where {T<:Real, D<:ContinuousMultivariateSampleable}
     DelagueSet{T, D}(d, γ1, γ2, coefficients, intercepts)
 end
 
