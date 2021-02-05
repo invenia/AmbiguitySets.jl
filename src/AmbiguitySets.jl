@@ -187,6 +187,4 @@ default_delague_γ1(d::AbstractMvNormal) = first(sqrt.(var(d)) ./ 5)
 
 distribution(s::DelagueSet) = s.d
 
-# NOTE: The Betina formulation doesn't use ambiguity sets?
-
 end

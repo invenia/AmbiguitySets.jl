@@ -42,7 +42,6 @@ using AmbiguitySets:
     end
 
     @testset "DelagueSet" begin
-        # Really simple construction tests
         s = DelagueSet(
             MvNormal(10, 0.25);
             γ1=0.05,
