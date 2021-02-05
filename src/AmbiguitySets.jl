@@ -25,10 +25,24 @@ Base.rand(s::AmbiguitySet) = rand(distribution(s))
 """
     Bertsimas <: AmbiguitySet
 
-Atributes:
+```math
+\\left\\{ \\mu \\; \\middle| \\begin{array}{ll}
+s.t.  \\quad \\mu_i \\leq \\hat{r}_i + z_i \\Delta_i \\quad \\forall i = 1:\\mathcal{N} \\\\
+\\quad \\quad \\mu_i \\geq \\hat{r}_i - z_i \\Delta_i  \\quad \\forall i = 1:\\mathcal{N} \\\\
+\\quad \\quad z_i \\geq 0 \\quad \\forall i = 1:\\mathcal{N} \\\\
+\\quad \\quad z_i \\leq 1 \\quad \\forall i = 1:\\mathcal{N} \\\\
+\\quad \\quad \\sum_{i}^{\\mathcal{N}} z_i \\leq \\Gamma \\\\
+\\end{array}
+\\right\\} \\\\
+```
+
+Attributes:
 - `d::Sampleable{Multivariate, Continous}`: The parent distribution with an uncertain mean
 - `Δ::Array{Float64,1}`: Uncertainty around mean. (default: std(d) / 5)
 - `Γ::Float64`: Number of assets in worst case. (default: 0.1 * length(d))
+
+References:
+- Bertsimas, D. e Sim, M. (2004). The price of robustness. Operations research, 52(1):35–53.
 
 For more information on how Bertsimas' uncertainty sets are used for RO, please review
 the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/PortfolioOptimization.jl/).
@@ -69,9 +83,19 @@ distribution(s::Bertsimas) = s.d
 """
     BenTal <: AmbiguitySet
 
+```math
+\\left\\{ \\mu \\; \\middle| \\begin{array}{ll}
+s.t.  \\quad \\sqrt{(\\hat{r} - \\mu) ' \\Sigma^{-1} (\\hat{r} - \\mu)} \\leq \\delta \\\\
+\\end{array}
+\\right\\} \\\\
+```
+
 Atributes:
 - `d::Sampleable{Multivariate, Continous}`: The parent distribution with an uncertain mean
 - `Δ::Array{Float64,1}`: Uniform uncertainty around mean. (default: std(dist) / 5)
+
+References:
+- Ben-Tal, A. e Nemirovski, A. (2000). Robust solutions of linear programming problems contaminated with uncertain data. Mathematical programming, 88(3):411–424.
 
 For more information on how BenTal uncertainty sets are used for RO, please review
 the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/PortfolioOptimization.jl/).
@@ -100,12 +124,23 @@ distribution(s::BenTal) = s.d
 """
     Delague <: AmbiguitySet
 
+```math
+\\left\\{ r  \\; \\middle| \\begin{array}{ll}
+s.t.  \\quad (\\mathbb{E} [r] - \\hat{r}) ' \\Sigma^{-1} (\\mathbb{E} [r] - \\hat{r}) \\leq \\gamma_1 \\\\
+\\quad \\quad \\mathbb{E} [ (r - \\hat{r}) ' (r - \\hat{r}) ] \\leq \\gamma_2 \\Sigma \\\\
+\\end{array}
+\\right\\} \\\\
+```
+
 Atributes:
 - `d::Sampleable{Multivariate, Continous}`: The parent distribution with an uncertain mean
 - `γ1::Float64`: Uniform uncertainty around the mean (has to be greater than 0). (default: std(dist) / 5)
 - `γ2::Float64`: Uncertainty around the covariance (has to be greater than 1). (default: 3.0)
 - `coefficients::Vector{Float64}`: Piece-wise utility coeficients (default [1.0]).
 - `intercepts::Vector{Float64}`: Piece-wise utility intercepts (default [0.0]).
+
+References:
+- Delage paper on moment uncertainty (what I implemented): https://www.researchgate.net/publication/220244490_Distributionally_Robust_Optimization_Under_Moment_Uncertainty_with_Application_to_Data-Driven_Problems
 
 For more information on how BenTal uncertainty sets are used for RO, please review
 the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/PortfolioOptimization.jl/).
