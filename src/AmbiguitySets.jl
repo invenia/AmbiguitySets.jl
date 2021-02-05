@@ -60,6 +60,8 @@ struct BertsimasSet{T<:Real, D<:Sampleable} <: AmbiguitySet{T, D}
             "Distribution ($(length(d))) and Δ ($(length(d))) are not the same length"
         ))
         all(>=(0), Δ) || throw(ArgumentError("All uncertainty deltas must be >= 0"))
+        Γ >= 0 || throw(ArgumentError("Budget must be >= 0"))
+        Γ <= length(d) || @warn "Budget should not exceed the distribution length"
         return new{T, D}(d, Δ, Γ)
     end
 end
@@ -94,7 +96,7 @@ s.t.  \\quad \\sqrt{(\\hat{r} - \\mu) ' \\Sigma^{-1} (\\hat{r} - \\mu)} \\leq \\
 
 Atributes:
 - `d::Sampleable{Multivariate, Continous}`: The parent distribution with an uncertain mean
-- `Δ::Array{Float64,1}`: Uniform uncertainty around mean. (default: std(dist) / 5)
+- `Δ::Array{Float64,1}`: Uniform uncertainty around mean. (default: 0.025)
 
 References:
 - Ben-Tal, A. e Nemirovski, A. (2000). Robust solutions of linear programming problems contaminated with uncertain data. Mathematical programming, 88(3):411–424.
@@ -117,9 +119,7 @@ end
 BenTalSet(d::D, Δ::T) where {T<:Real, D<:Sampleable} = BenTalSet{T, D}(d, Δ)
 
 # Kwarg constructor with default delta value
-BenTalSet(d::AbstractMvNormal; Δ=default_ben_tal_delta(d)) = BenTalSet(d, Δ)
-
-default_ben_tal_delta(d::AbstractMvNormal) = first(sqrt.(var(d)) ./ 5)
+BenTalSet(d::AbstractMvNormal; Δ=0.025) = BenTalSet(d, Δ)
 
 distribution(s::BenTalSet) = s.d
 
@@ -183,7 +183,7 @@ function DelagueSet(
     return DelagueSet(d, γ1, γ2, coefficients, intercepts)
 end
 
-default_delague_γ1(d::AbstractMvNormal) = first(sqrt.(diag(cov(d))) ./ 5)
+default_delague_γ1(d::AbstractMvNormal) = first(sqrt.(var(d)) ./ 5)
 
 distribution(s::DelagueSet) = s.d
 
