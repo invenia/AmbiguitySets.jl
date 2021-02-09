@@ -7,7 +7,7 @@ using AmbiguitySets:
     AmbiguitySet,
     BertsimasSet,
     BenTalSet,
-    DelagueSet,
+    DelageSet,
     distribution
 
 
@@ -46,8 +46,8 @@ using AmbiguitySets:
         @test_throws ArgumentError BenTalSet(MvNormal(10, 0.25); Δ=-0.5)
     end
 
-    @testset "DelagueSet" begin
-        s = DelagueSet(
+    @testset "DelageSet" begin
+        s = DelageSet(
             MvNormal(10, 0.25);
             γ1=0.05,
             γ2=3.0,
@@ -60,10 +60,10 @@ using AmbiguitySets:
         @test isa(s, Sampleable)
         @test isa(s, AmbiguitySet)
         @test distribution(s) == MvNormal(10, 0.25)
-        @test s == DelagueSet(MvNormal(10, 0.25))
+        @test s == DelageSet(MvNormal(10, 0.25))
 
         # Test constructor error cases
-        @test_throws ArgumentError DelagueSet(
+        @test_throws ArgumentError DelageSet(
             MvNormal(10, 0.25);
             γ1=-0.05,
             γ2=3.0,
@@ -71,7 +71,7 @@ using AmbiguitySets:
             intercepts=[0.0],
         )
 
-        @test_throws ArgumentError DelagueSet(
+        @test_throws ArgumentError DelageSet(
             MvNormal(10, 0.25);
             γ1=0.05,
             γ2=0.5,
@@ -79,7 +79,7 @@ using AmbiguitySets:
             intercepts=[0.0],
         )
 
-        @test_throws ArgumentError DelagueSet(
+        @test_throws ArgumentError DelageSet(
             MvNormal(10, 0.25);
             γ1=0.05,
             γ2=3.0,

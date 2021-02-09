@@ -4,7 +4,7 @@ using Distributions
 using LinearAlgebra
 using Random
 
-export AmbiguitySet, BertsimasSet, BenTalSet, DelagueSet
+export AmbiguitySet, BertsimasSet, BenTalSet, DelageSet
 
 const ContinuousMultivariateSampleable = Sampleable{Multivariate, Continuous}
 
@@ -30,7 +30,7 @@ end
 
 # NOTE: Technically we could probably implement `rand` for `Bertsimas` and `BenTal` by
 # uniformly augmenting the samples from the underlying MvNormal with the uncertainty
-# estimate. I don't think anything like that would be possible for Delague though.
+# estimate. I don't think anything like that would be possible for Delage though.
 
 """
     BertsimasSet <: AmbiguitySet
@@ -132,7 +132,7 @@ BenTalSet(d::AbstractMvNormal; Δ=0.025) = BenTalSet(d, Δ)
 distribution(s::BenTalSet) = s.d
 
 """
-    DelagueSet <: AmbiguitySet
+    DelageSet <: AmbiguitySet
 
 ```math
 \\left\\{ r  \\; \\middle| \\begin{array}{ll}
@@ -155,7 +155,7 @@ References:
 For more information on how BenTal uncertainty sets are used for RO, please review
 the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/PortfolioOptimization.jl/).
 """
-struct DelagueSet{T<:Real, D<:ContinuousMultivariateSampleable} <: AmbiguitySet{T, D}
+struct DelageSet{T<:Real, D<:ContinuousMultivariateSampleable} <: AmbiguitySet{T, D}
     d::D
     γ1::T
     γ2::T
@@ -163,7 +163,7 @@ struct DelagueSet{T<:Real, D<:ContinuousMultivariateSampleable} <: AmbiguitySet{
     intercepts::Vector{T}
 
     # Inner constructor for validating arguments
-    function DelagueSet{T, D}(
+    function DelageSet{T, D}(
         d::D, γ1::T, γ2::T, coefficients::Vector{T}, intercepts::Vector{T}
     ) where {T<:Real, D<:ContinuousMultivariateSampleable}
         length(coefficients) == length(intercepts) || throw(ArgumentError(
@@ -177,22 +177,22 @@ struct DelagueSet{T<:Real, D<:ContinuousMultivariateSampleable} <: AmbiguitySet{
 end
 
 # Default outer constructor
-function DelagueSet(
+function DelageSet(
     d::D, γ1::T, γ2::T, coefficients::Vector{T}, intercepts::Vector{T}
 ) where {T<:Real, D<:ContinuousMultivariateSampleable}
-    DelagueSet{T, D}(d, γ1, γ2, coefficients, intercepts)
+    DelageSet{T, D}(d, γ1, γ2, coefficients, intercepts)
 end
 
 # Kwarg constructor with defaults
-function DelagueSet(
+function DelageSet(
     d::AbstractMvNormal;
     γ1=default_delague_γ1(d), γ2=3.0, coefficients=[1.0], intercepts=[0.0],
 )
-    return DelagueSet(d, γ1, γ2, coefficients, intercepts)
+    return DelageSet(d, γ1, γ2, coefficients, intercepts)
 end
 
 default_delague_γ1(d::AbstractMvNormal) = first(sqrt.(var(d)) ./ 5)
 
-distribution(s::DelagueSet) = s.d
+distribution(s::DelageSet) = s.d
 
 end
