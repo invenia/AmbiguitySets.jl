@@ -1,13 +1,21 @@
-abstract type AmbiguitySetEstimator{T<:AmbiguitySet} end
+abstract type AmbiguitySetEstimator{S<:AmbiguitySet} end
+
+estimate(estimator::AmbiguitySetEstimator{S}, d, data; kwargs...)::S where {S<:AmbiguitySet} = S(d; kwargs...)
 
 """
 Based on the Depage's paper section 3.4: https://www.researchgate.net/publication/220244490_Distributionally_Robust_Optimization_Under_Moment_Uncertainty_with_Application_to_Data-Driven_Problems
 """
-struct DelageDataDrivenEstimator{T} <: AmbiguitySetEstimator{T} where {T::DelageSet}
-    δ::Float64
+struct DelageDataDrivenEstimator{S} <: AmbiguitySetEstimator{S} where {S::DelageSet, T<:Real}
+    δ::T
+    function DelageDataDrivenEstimator{S,T}(;
+        δ::T=0.001
+    ) where {S<:DelageSet, T<:Real}
+        (δ >= 0.0 && δ <= 1.0) || throw(ArgumentError("δ must be: 0 <= δ <= 1"))
+        return new{S, T}(δ)
+    end
 end
 
-function estimate(estimator::DelageDataDrivenEstimator{T}, d, ξ)::T where {T<:DelageSet} 
+function estimate(estimator::DelageDataDrivenEstimator{S}, d, ξ; kwargs...)::T where {S<:DelageSet} 
     δ = estimator.δ
     means = Distributions.mean(d)
     inv_sqrt_cov = inv(Matrix(sqrt(cov(d))))
@@ -28,5 +36,5 @@ function estimate(estimator::DelageDataDrivenEstimator{T}, d, ξ)::T where {T<:D
 
     γ2 = (1 + β̄) / (1 - ᾱ - β̄)
 
-    return (γ1=γ1, γ2=γ2)
+    return S(distribution(dist); γ1=γ1, γ2=γ2, kwargs...)
 end
