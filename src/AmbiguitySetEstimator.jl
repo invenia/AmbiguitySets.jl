@@ -8,7 +8,7 @@ abstract type AmbiguitySetEstimator{S<:AmbiguitySet} end
 """
     estimate(::Type{<:AmbiguitySetEstimator{S}}, d, data; kwargs...) where {S<:AmbiguitySet}
 
-Estimate function that just calls default constructors.
+Constructs an `AmbiguitySet` by estimating appropriate parameters from the predictive distribution and raw samples.
 """
 estimate(::Type{<:AmbiguitySetEstimator{S}}, d, data; kwargs...) where {S<:AmbiguitySet} = S(d; kwargs...)
 
