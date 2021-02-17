@@ -95,7 +95,7 @@ end
     seed = 4444
     rng = MersenneTwister(seed)
     d = MvNormal(n, 0.25)
-    data = rand(rng, d, M)'
+    data = Matrix(transpose(rand(rng, d, M)))
     @testset "Abstract Estimator: $S" for S in [BertsimasSet, BenTalSet, DelageSet]
         s = AmbiguitySets.estimate(AmbiguitySetEstimator{S}(), d, rand(M, n))
         @test isa(s, S)
