@@ -5,9 +5,7 @@ using LinearAlgebra
 using Random
 
 export AmbiguitySet, AmbiguitySetEstimator, BertsimasSet, BenTalSet, DelageSet,
-    DelageDataDrivenEstimator
-
-include("AmbiguitySetEstimator.jl")
+    DelageDataDrivenEstimator, estimate
 
 const ContinuousMultivariateSampleable = Sampleable{Multivariate, Continuous}
 
@@ -197,5 +195,7 @@ end
 default_delague_γ1(d::AbstractMvNormal) = first(sqrt.(var(d)) ./ 5)
 
 distribution(s::DelageSet) = s.d
+
+include("AmbiguitySetEstimator.jl")
 
 end
