@@ -10,12 +10,13 @@ struct AmbiguitySetEstimator{S<:AmbiguitySet} <: AbstractAmbiguitySetEstimator{S
 """
     estimate(::Type{<:AmbiguitySetEstimator{S}}, d, data; kwargs...) where {S<:AmbiguitySet}
 
-Estimate function that just calls default constructors.
+Constructs an `AmbiguitySet` by estimating appropriate parameters from the predictive distribution and raw samples.
 """
 estimate(::AbstractAmbiguitySetEstimator{S}, d, data; kwargs...) where {S<:AmbiguitySet} = S(d; kwargs...)
 
 """
     DelageDataDrivenEstimator{S, T} <: AmbiguitySetEstimator{S}
+
 Based on the Depage's paper section 3.4: https://www.researchgate.net/publication/220244490_Distributionally_Robust_Optimization_Under_Moment_Uncertainty_with_Application_to_Data-Driven_Problems
 """
 struct DelageDataDrivenEstimator{S, T} <: AbstractAmbiguitySetEstimator{S}
