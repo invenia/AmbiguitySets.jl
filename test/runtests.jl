@@ -97,7 +97,7 @@ end
     d = MvNormal(n, 0.25)
     data = rand(rng, d, M)'
     @testset "Abstract Estimator: $S" for S in [BertsimasSet, BenTalSet, DelageSet]
-        s = AmbiguitySets.estimate(AmbiguitySetEstimator{S}, d, rand(M, n))
+        s = AmbiguitySets.estimate(AmbiguitySetEstimator{S}(), d, rand(M, n))
         @test isa(s, S)
     end
     @testset "Delague Estimator" begin
