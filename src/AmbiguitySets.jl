@@ -4,7 +4,10 @@ using Distributions
 using LinearAlgebra
 using Random
 
-export AmbiguitySet, BertsimasSet, BenTalSet, DelageSet
+export AmbiguitySet, AmbiguitySetEstimator, BertsimasSet, BenTalSet, DelageSet,
+    DelageDataDrivenEstimator
+
+include("AmbiguitySetEstimator.jl")
 
 const ContinuousMultivariateSampleable = Sampleable{Multivariate, Continuous}
 
