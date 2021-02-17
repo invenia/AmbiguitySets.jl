@@ -11,8 +11,12 @@ struct AmbiguitySetEstimator{S<:AmbiguitySet} <: AbstractAmbiguitySetEstimator{S
     estimate(::Type{<:AmbiguitySetEstimator{S}}, d, data; kwargs...) where {S<:AmbiguitySet}
 
 Constructs an `AmbiguitySet` by estimating appropriate parameters from the predictive distribution and raw samples.
+
+Attributes:
+ - `d`: Predictive distribution.
+ - `data`: Raw samples.
 """
-estimate(::AbstractAmbiguitySetEstimator{S}, d, data; kwargs...) where {S<:AmbiguitySet} = S(d; kwargs...)
+estimate(::AbstractAmbiguitySetEstimator{S}, d, data::Array{Float64,2}; kwargs...) where {S<:AmbiguitySet} = S(d; kwargs...)
 
 """
     DelageDataDrivenEstimator{S, T} <: AmbiguitySetEstimator{S}
@@ -29,7 +33,16 @@ struct DelageDataDrivenEstimator{S, T} <: AbstractAmbiguitySetEstimator{S}
     end
 end
 
-function estimate(estimator::DelageDataDrivenEstimator{S, T}, d, ξ; kwargs...)::S where {S<:DelageSet, T<:Real} 
+"""
+    estimate(::Type{<:AmbiguitySetEstimator{S}}, d, data; kwargs...) where {S<:AmbiguitySet}
+
+Constructs an `DelageSet` by estimating appropriate parameters from the predictive distribution and raw samples.
+
+Attributes:
+ - `d`: Predictive distribution.
+ - `ξ`: Raw samples.
+"""
+function estimate(estimator::DelageDataDrivenEstimator{S, T}, d, ξ::Array{Float64,2}; kwargs...)::S where {S<:DelageSet, T<:Real} 
     δ = estimator.δ
     means = Distributions.mean(d)
     m = length(means)
