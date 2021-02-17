@@ -1,8 +1,19 @@
+"""
+    AmbiguitySetEstimator{S<:AmbiguitySet}
+
+Abstract type for parameter estimation algorithms.
+"""
 abstract type AmbiguitySetEstimator{S<:AmbiguitySet} end
 
+"""
+    estimate(::Type{<:AmbiguitySetEstimator{S}}, d, data; kwargs...) where {S<:AmbiguitySet}
+
+Estimate function that just calls default constructors.
+"""
 estimate(::Type{<:AmbiguitySetEstimator{S}}, d, data; kwargs...) where {S<:AmbiguitySet} = S(d; kwargs...)
 
 """
+    DelageDataDrivenEstimator{S, T} <: AmbiguitySetEstimator{S}
 Based on the Depage's paper section 3.4: https://www.researchgate.net/publication/220244490_Distributionally_Robust_Optimization_Under_Moment_Uncertainty_with_Application_to_Data-Driven_Problems
 """
 struct DelageDataDrivenEstimator{S, T} <: AmbiguitySetEstimator{S}
