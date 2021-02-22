@@ -19,22 +19,54 @@ Attributes:
 estimate(::AbstractAmbiguitySetEstimator{S}, d, data::Array{Float64,2}; kwargs...) where {S<:AmbiguitySet} = S(d; kwargs...)
 
 """
+    BertsimasDataDrivenEstimator{S, T} <: AmbiguitySetEstimator{S}
+
+Parameter estimator for Bertsimas method
+"""
+struct BertsimasDataDrivenEstimator{S, T} <: AbstractAmbiguitySetEstimator{S}
+    Δ_factor::T
+    Γ_factor::T
+    function BertsimasDataDrivenEstimator{S}(;
+        Δ_factor::T=0.2,
+        Γ_factor::T=0.1
+    ) where {S<:BertsimasSet, T<:Real}
+        0.0 <= Δ_factor || throw(ArgumentError("Δ_factor must be: 0 <= Δ_factor"))
+        0.0 <= Γ_factor <= 1.0 || throw(ArgumentError("Δ_factor must be: 0 <= Γ_factor <= 1"))
+        return new{S, T}(Δ_factor, Γ_factor)
+    end
+end
+
+"""
+    estimate(::Type{<:BertsimasDataDrivenEstimator{S}}, d, data; kwargs...) where {S<:BertsimasSet, T<:Real}
+
+Constructs an `BertsimasSet` by estimating appropriate parameters from the predictive distribution.
+
+Attributes:
+ - `d`: Predictive distribution.
+ - `data`: Raw samples. Not used.
+"""
+
+function estimate(estimator::BertsimasDataDrivenEstimator{S, T}, d, data::Array{Float64,2}; kwargs...)::S where {S<:BertsimasSet, T<:Real}
+    return S(d; Δ=estimator.Δ_factor*sqrt.(var(d)), Γ=estimator.Γ_factor*length(d), kwargs...)
+end
+
+"""
     DelageDataDrivenEstimator{S, T} <: AmbiguitySetEstimator{S}
 
-Based on the Depage's paper section 3.4: https://www.researchgate.net/publication/220244490_Distributionally_Robust_Optimization_Under_Moment_Uncertainty_with_Application_to_Data-Driven_Problems
+Based on the Delage's paper section 3.4: https://www.researchgate.net/publication/220244490_Distributionally_Robust_Optimization_Under_Moment_Uncertainty_with_Application_to_Data-Driven_Problems
 """
 struct DelageDataDrivenEstimator{S, T} <: AbstractAmbiguitySetEstimator{S}
     δ::T
     function DelageDataDrivenEstimator{S}(;
         δ::T=0.001
     ) where {S<:DelageSet, T<:Real}
-        (δ >= 0.0 && δ <= 1.0) || throw(ArgumentError("δ must be: 0 <= δ <= 1"))
+        0.0 <= δ <= 1.0 || throw(ArgumentError("δ must be: 0 <= δ <= 1"))
         return new{S, T}(δ)
     end
 end
 
 """
-    estimate(::Type{<:AmbiguitySetEstimator{S}}, d, data; kwargs...) where {S<:AmbiguitySet}
+    estimate(::Type{<:DelageDataDrivenEstimator{S, T}}, d, ξ; kwargs...) where {S<:DelageSet, T<:Real}
 
 Constructs an `DelageSet` by estimating appropriate parameters from the predictive distribution and raw samples.
 

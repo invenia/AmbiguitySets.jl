@@ -143,6 +143,12 @@ end
         s = AmbiguitySets.estimate(AmbiguitySetEstimator{S}(), d, rand(M, n))
         @test isa(s, S)
     end
+    @testset "Bertsimas Estimator" begin
+        s = AmbiguitySets.estimate(
+            BertsimasDataDrivenEstimator{BertsimasSet}(Δ_factor=7.7, Γ_factor=0.5), d, data
+        )
+        @test isa(s, BertsimasSet)
+    end
     @testset "Delague Estimator" begin
         s = AmbiguitySets.estimate(DelageDataDrivenEstimator{DelageSet}(δ=0.025), d, data)
         @test isa(s, DelageSet)
