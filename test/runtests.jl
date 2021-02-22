@@ -46,8 +46,8 @@ using AmbiguitySets:
         @test_throws ArgumentError BenTalSet(MvNormal(10, 0.25); Δ=-0.5)
     end
 
-    @testset "DelageSet" begin
-        s = DelageSet(
+    @testset "$S" for S in [DelageSet; LiYangSet]
+        s = S(
             MvNormal(10, 0.25);
             γ1=0.05,
             γ2=3.0,
@@ -60,10 +60,10 @@ using AmbiguitySets:
         @test isa(s, Sampleable)
         @test isa(s, AmbiguitySet)
         @test distribution(s) == MvNormal(10, 0.25)
-        @test s == DelageSet(MvNormal(10, 0.25))
+        @test s == S(MvNormal(10, 0.25))
 
         # Test constructor error cases
-        @test_throws ArgumentError DelageSet(
+        @test_throws ArgumentError S(
             MvNormal(10, 0.25);
             γ1=-0.05,
             γ2=3.0,
@@ -71,7 +71,7 @@ using AmbiguitySets:
             intercepts=[0.0],
         )
 
-        @test_throws ArgumentError DelageSet(
+        @test_throws ArgumentError S(
             MvNormal(10, 0.25);
             γ1=0.05,
             γ2=0.5,
@@ -79,13 +79,56 @@ using AmbiguitySets:
             intercepts=[0.0],
         )
 
-        @test_throws ArgumentError DelageSet(
+        @test_throws ArgumentError S(
             MvNormal(10, 0.25);
             γ1=0.05,
             γ2=3.0,
             coefficients=[1.0, 0.2],
             intercepts=[0.0],
         )
+
+        if S === LiYangSet
+            d = MvNormal(10, 0.25)
+            @test_throws ArgumentError S(
+                d;
+                γ1=0.05,
+                γ2=3.0,
+                coefficients=[1.0],
+                intercepts=[0.0],
+                ξ̄=fill(0.05, 9),
+                ξ̲=fill(-0.05, 10)
+            )
+
+            @test_throws ArgumentError S(
+                d;
+                γ1=0.05,
+                γ2=3.0,
+                coefficients=[1.0],
+                intercepts=[0.0],
+                ξ̄=fill(0.05, 10),
+                ξ̲=fill(-0.05, 9)
+            )
+
+            @test_throws ArgumentError S(
+                d;
+                γ1=0.05,
+                γ2=3.0,
+                coefficients=[1.0],
+                intercepts=[0.0],
+                ξ̄=mean(d) .+ sqrt.(var(d)),
+                ξ̲=mean(d) .+ sqrt.(var(d))
+            )
+
+            @test_throws ArgumentError S(
+                d;
+                γ1=0.05,
+                γ2=3.0,
+                coefficients=[1.0],
+                intercepts=[0.0],
+                ξ̄=mean(d) .-  sqrt.(var(d)),
+                ξ̲=mean(d) .-  sqrt.(var(d))
+            )
+        end
     end
 end
 
