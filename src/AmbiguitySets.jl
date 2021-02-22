@@ -249,7 +249,7 @@ struct YangSet{T<:Real, D<:ContinuousMultivariateSampleable} <: AmbiguitySet{T, 
             "Distribution ($(length(d))) and ξ̄ ($(length(ξ̲))) are not the same length"
         ))
         means = mean(d)
-        prod(ξ̄ .>= means) || throw(ArgumentError("ξ̄ must be >= mean(d)"))
+        all(ξ̄ .>= means) || throw(ArgumentError("ξ̄ must be >= mean(d)"))
         prod(ξ̲ .<= means) || throw(ArgumentError("ξ̲ must be <= mean(d)"))
         γ1 >= 0 || throw(ArgumentError("γ1 must be >= 0"))
         γ2 >= 1 || throw(ArgumentError("γ2 must be >= 1"))
