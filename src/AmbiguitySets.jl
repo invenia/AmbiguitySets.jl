@@ -4,7 +4,7 @@ using Distributions
 using LinearAlgebra
 using Random
 
-export AmbiguitySet, AmbiguitySetEstimator, BertsimasSet, BenTalSet, DelageSet, LiYangSet,
+export AmbiguitySet, AmbiguitySetEstimator, BertsimasSet, BenTalSet, DelageSet, YangSet,
     DelageDataDrivenEstimator, estimate
 
 const ContinuousMultivariateSampleable = Sampleable{Multivariate, Continuous}
@@ -198,7 +198,7 @@ distribution(s::DelageSet) = s.d
 
 
 """
-    LiYangSet <: AmbiguitySet
+    YangSet <: AmbiguitySet
 
 ```math
 \\left\\{ r  \\; \\middle| \\begin{array}{ll}
@@ -224,7 +224,7 @@ References:
 For more information on how BenTal uncertainty sets are used for RO, please review
 the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/PortfolioOptimization.jl/).
 """
-struct LiYangSet{T<:Real, D<:ContinuousMultivariateSampleable} <: AmbiguitySet{T, D}
+struct YangSet{T<:Real, D<:ContinuousMultivariateSampleable} <: AmbiguitySet{T, D}
     d::D
     γ1::T
     γ2::T
@@ -234,7 +234,7 @@ struct LiYangSet{T<:Real, D<:ContinuousMultivariateSampleable} <: AmbiguitySet{T
     ξ̲::Vector{T}
 
     # Inner constructor for validating arguments
-    function LiYangSet{T, D}(
+    function YangSet{T, D}(
         d::D, γ1::T, γ2::T, coefficients::Vector{T}, intercepts::Vector{T}, 
         ξ̄::Vector{T}, ξ̲::Vector{T}
     ) where {T<:Real, D<:ContinuousMultivariateSampleable}
@@ -258,23 +258,23 @@ struct LiYangSet{T<:Real, D<:ContinuousMultivariateSampleable} <: AmbiguitySet{T
 end
 
 # Default outer constructor
-function LiYangSet(
+function YangSet(
     d::D, γ1::T, γ2::T, coefficients::Vector{T}, intercepts::Vector{T}, 
     ξ̄::Vector{T}, ξ̲::Vector{T}
 ) where {T<:Real, D<:ContinuousMultivariateSampleable}
-    LiYangSet{T, D}(d, γ1, γ2, coefficients, intercepts, ξ̄, ξ̲)
+    YangSet{T, D}(d, γ1, γ2, coefficients, intercepts, ξ̄, ξ̲)
 end
 
 # Kwarg constructor with defaults
-function LiYangSet(
+function YangSet(
     d::AbstractMvNormal;
     γ1=default_delague_γ1(d), γ2=3.0, coefficients=[1.0], intercepts=[0.0],
     ξ̄=(mean(d) .+ default_bertsimas_delta(d)), ξ̲=(mean(d) .- default_bertsimas_delta(d))
 )
-    return LiYangSet(d, γ1, γ2, coefficients, intercepts, ξ̄, ξ̲)
+    return YangSet(d, γ1, γ2, coefficients, intercepts, ξ̄, ξ̲)
 end
 
-distribution(s::LiYangSet) = s.d
+distribution(s::YangSet) = s.d
 
 include("AmbiguitySetEstimator.jl")
 

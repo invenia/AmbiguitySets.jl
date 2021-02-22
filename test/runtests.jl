@@ -46,7 +46,7 @@ using AmbiguitySets:
         @test_throws ArgumentError BenTalSet(MvNormal(10, 0.25); Δ=-0.5)
     end
 
-    @testset "$S" for S in [DelageSet; LiYangSet]
+    @testset "$S" for S in [DelageSet; YangSet]
         s = S(
             MvNormal(10, 0.25);
             γ1=0.05,
@@ -87,7 +87,7 @@ using AmbiguitySets:
             intercepts=[0.0],
         )
 
-        if S === LiYangSet
+        if S === YangSet
             d = MvNormal(10, 0.25)
             @test_throws ArgumentError S(
                 d;
