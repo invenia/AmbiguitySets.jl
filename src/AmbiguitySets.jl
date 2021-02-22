@@ -4,7 +4,7 @@ using Distributions
 using LinearAlgebra
 using Random
 
-export AmbiguitySet, AmbiguitySetEstimator, BertsimasSet, BenTalSet, DelageSet,
+export AmbiguitySet, AmbiguitySetEstimator, BertsimasSet, BenTalSet, DelageSet, YangSet,
     DelageDataDrivenEstimator, estimate
 
 const ContinuousMultivariateSampleable = Sampleable{Multivariate, Continuous}
@@ -66,7 +66,7 @@ struct BertsimasSet{T<:Real, D<:ContinuousMultivariateSampleable} <: AmbiguitySe
     # Inner constructor for validating arguments
     function BertsimasSet{T, D}(d::D, Δ::Vector{T}, Γ::T) where {T<:Real, D<:ContinuousMultivariateSampleable}
         length(d) == length(Δ) || throw(ArgumentError(
-            "Distribution ($(length(d))) and Δ ($(length(d))) are not the same length"
+            "Distribution ($(length(d))) and Δ ($(length(Δ))) are not the same length"
         ))
         all(>=(0), Δ) || throw(ArgumentError("All uncertainty deltas must be >= 0"))
         Γ >= 0 || throw(ArgumentError("Budget must be >= 0"))
@@ -195,6 +195,86 @@ end
 default_delague_γ1(d::AbstractMvNormal) = first(sqrt.(var(d)) ./ 5)
 
 distribution(s::DelageSet) = s.d
+
+
+"""
+    YangSet <: AmbiguitySet
+
+```math
+\\left\\{ r  \\; \\middle| \\begin{array}{ll}
+s.t.  \\quad (\\mathbb{E} [r] - \\hat{r}) ' \\Sigma^{-1} (\\mathbb{E} [r] - \\hat{r}) \\leq \\gamma_1 \\\\
+\\quad \\quad \\mathbb{E} [ (r - \\hat{r}) ' (r - \\hat{r}) ] \\leq \\gamma_2 \\Sigma \\\\
+\\quad \\quad \\underline{\\xi} \\leq \\xi \\leq \\bar{\\xi} \\\\
+\\end{array}
+\\right\\} \\\\
+```
+
+Atributes:
+- `d::Sampleable{Multivariate, Continous}`: The parent distribution with an uncertain mean
+- `γ1::Float64`: Uniform uncertainty around the mean (has to be greater than 0). (default: std(dist) / 5)
+- `γ2::Float64`: Uncertainty around the covariance (has to be greater than 1). (default: 3.0)
+- `coefficients::Vector{Float64}`: Piece-wise utility coeficients (default [1.0]).
+- `intercepts::Vector{Float64}`: Piece-wise utility intercepts (default [0.0]).
+- `ξ̄::Vector{T}`: Suport upper limits
+- `ξ̲::Vector{T}`: Suport lower limits
+
+References:
+- Li Yang paper on moment uncertainty and CVAR: https://www.hindawi.com/journals/jam/2014/784715/
+
+For more information on how BenTal uncertainty sets are used for RO, please review
+the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/PortfolioOptimization.jl/).
+"""
+struct YangSet{T<:Real, D<:ContinuousMultivariateSampleable} <: AmbiguitySet{T, D}
+    d::D
+    γ1::T
+    γ2::T
+    coefficients::Vector{T}
+    intercepts::Vector{T}
+    ξ̲::Vector{T}
+    ξ̄::Vector{T}
+
+    # Inner constructor for validating arguments
+    function YangSet{T, D}(
+        d::D, γ1::T, γ2::T, coefficients::Vector{T}, intercepts::Vector{T}, 
+        ξ̲::Vector{T}, ξ̄::Vector{T}
+    ) where {T<:Real, D<:ContinuousMultivariateSampleable}
+        length(coefficients) == length(intercepts) || throw(ArgumentError(
+            "Length of coefficients ($(length(coefficients))) and intercepts " *
+            "($(length(intercepts))) do not match"
+        ))
+        length(d) == length(ξ̄) || throw(ArgumentError(
+            "Distribution ($(length(d))) and ξ̄ ($(length(ξ̄))) are not the same length"
+        ))
+        length(d) == length(ξ̲) || throw(ArgumentError(
+            "Distribution ($(length(d))) and ξ̄ ($(length(ξ̲))) are not the same length"
+        ))
+        means = mean(d)
+        all(ξ̄ .>= means) || throw(ArgumentError("ξ̄ must be >= mean(d)"))
+        all(ξ̲ .<= means) || throw(ArgumentError("ξ̲ must be <= mean(d)"))
+        γ1 >= 0 || throw(ArgumentError("γ1 must be >= 0"))
+        γ2 >= 1 || throw(ArgumentError("γ2 must be >= 1"))
+        return new{T, D}(d, γ1, γ2, coefficients, intercepts, ξ̲, ξ̄)
+    end
+end
+
+# Default outer constructor
+function YangSet(
+    d::D, γ1::T, γ2::T, coefficients::Vector{T}, intercepts::Vector{T}, 
+    ξ̲::Vector{T}, ξ̄::Vector{T}
+) where {T<:Real, D<:ContinuousMultivariateSampleable}
+    YangSet{T, D}(d, γ1, γ2, coefficients, intercepts, ξ̲, ξ̄)
+end
+
+# Kwarg constructor with defaults
+function YangSet(
+    d::AbstractMvNormal;
+    γ1=default_delague_γ1(d), γ2=3.0, coefficients=[1.0], intercepts=[0.0],
+    ξ̲=(mean(d) .- default_bertsimas_delta(d)), ξ̄=(mean(d) .+ default_bertsimas_delta(d))
+)
+    return YangSet(d, γ1, γ2, coefficients, intercepts, ξ̲, ξ̄)
+end
+
+distribution(s::YangSet) = s.d
 
 include("AmbiguitySetEstimator.jl")
 
