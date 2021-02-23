@@ -228,20 +228,13 @@ struct YangSet{T<:Real, D<:ContinuousMultivariateSampleable} <: AmbiguitySet{T, 
     d::D
     γ1::T
     γ2::T
-    coefficients::Vector{T}
-    intercepts::Vector{T}
     ξ̲::Vector{T}
     ξ̄::Vector{T}
 
     # Inner constructor for validating arguments
     function YangSet{T, D}(
-        d::D, γ1::T, γ2::T, coefficients::Vector{T}, intercepts::Vector{T}, 
-        ξ̲::Vector{T}, ξ̄::Vector{T}
+        d::D, γ1::T, γ2::T, ξ̲::Vector{T}, ξ̄::Vector{T}
     ) where {T<:Real, D<:ContinuousMultivariateSampleable}
-        length(coefficients) == length(intercepts) || throw(ArgumentError(
-            "Length of coefficients ($(length(coefficients))) and intercepts " *
-            "($(length(intercepts))) do not match"
-        ))
         length(d) == length(ξ̄) || throw(ArgumentError(
             "Distribution ($(length(d))) and ξ̄ ($(length(ξ̄))) are not the same length"
         ))
@@ -253,25 +246,24 @@ struct YangSet{T<:Real, D<:ContinuousMultivariateSampleable} <: AmbiguitySet{T, 
         all(ξ̲ .<= means) || throw(ArgumentError("ξ̲ must be <= mean(d)"))
         γ1 >= 0 || throw(ArgumentError("γ1 must be >= 0"))
         γ2 >= 1 || throw(ArgumentError("γ2 must be >= 1"))
-        return new{T, D}(d, γ1, γ2, coefficients, intercepts, ξ̲, ξ̄)
+        return new{T, D}(d, γ1, γ2, ξ̲, ξ̄)
     end
 end
 
 # Default outer constructor
 function YangSet(
-    d::D, γ1::T, γ2::T, coefficients::Vector{T}, intercepts::Vector{T}, 
-    ξ̲::Vector{T}, ξ̄::Vector{T}
+    d::D, γ1::T, γ2::T, ξ̲::Vector{T}, ξ̄::Vector{T}
 ) where {T<:Real, D<:ContinuousMultivariateSampleable}
-    YangSet{T, D}(d, γ1, γ2, coefficients, intercepts, ξ̲, ξ̄)
+    YangSet{T, D}(d, γ1, γ2, ξ̲, ξ̄)
 end
 
 # Kwarg constructor with defaults
 function YangSet(
     d::AbstractMvNormal;
-    γ1=default_delague_γ1(d), γ2=3.0, coefficients=[1.0], intercepts=[0.0],
+    γ1=default_delague_γ1(d), γ2=3.0, 
     ξ̲=(mean(d) .- default_bertsimas_delta(d)), ξ̄=(mean(d) .+ default_bertsimas_delta(d))
 )
-    return YangSet(d, γ1, γ2, coefficients, intercepts, ξ̲, ξ̄)
+    return YangSet(d, γ1, γ2, ξ̲, ξ̄)
 end
 
 distribution(s::YangSet) = s.d

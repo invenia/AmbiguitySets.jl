@@ -51,8 +51,6 @@ using AmbiguitySets:
             MvNormal(10, 0.25);
             γ1=0.05,
             γ2=3.0,
-            coefficients=[1.0],
-            intercepts=[0.0],
         )
 
         @test length(s) == 10
@@ -67,34 +65,29 @@ using AmbiguitySets:
             MvNormal(10, 0.25);
             γ1=-0.05,
             γ2=3.0,
-            coefficients=[1.0],
-            intercepts=[0.0],
         )
 
         @test_throws ArgumentError S(
             MvNormal(10, 0.25);
             γ1=0.05,
             γ2=0.5,
-            coefficients=[1.0],
-            intercepts=[0.0],
         )
 
-        @test_throws ArgumentError S(
-            MvNormal(10, 0.25);
-            γ1=0.05,
-            γ2=3.0,
-            coefficients=[1.0, 0.2],
-            intercepts=[0.0],
-        )
-
+        if S === DelageSet
+            @test_throws ArgumentError S(
+                MvNormal(10, 0.25);
+                γ1=0.05,
+                γ2=3.0,
+                coefficients=[1.0, 0.2],
+                intercepts=[0.0],
+            )
+        end
         if S === YangSet
             d = MvNormal(10, 0.25)
             @test_throws ArgumentError S(
                 d;
                 γ1=0.05,
                 γ2=3.0,
-                coefficients=[1.0],
-                intercepts=[0.0],
                 ξ̄=fill(0.05, 9),
                 ξ̲=fill(-0.05, 10)
             )
@@ -103,8 +96,6 @@ using AmbiguitySets:
                 d;
                 γ1=0.05,
                 γ2=3.0,
-                coefficients=[1.0],
-                intercepts=[0.0],
                 ξ̄=fill(0.05, 10),
                 ξ̲=fill(-0.05, 9)
             )
@@ -113,8 +104,6 @@ using AmbiguitySets:
                 d;
                 γ1=0.05,
                 γ2=3.0,
-                coefficients=[1.0],
-                intercepts=[0.0],
                 ξ̄=mean(d) .+ sqrt.(var(d)),
                 ξ̲=mean(d) .+ sqrt.(var(d))
             )
@@ -123,8 +112,6 @@ using AmbiguitySets:
                 d;
                 γ1=0.05,
                 γ2=3.0,
-                coefficients=[1.0],
-                intercepts=[0.0],
                 ξ̄=mean(d) .-  sqrt.(var(d)),
                 ξ̲=mean(d) .-  sqrt.(var(d))
             )
