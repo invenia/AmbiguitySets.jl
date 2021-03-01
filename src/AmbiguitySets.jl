@@ -4,7 +4,8 @@ using Distributions
 using LinearAlgebra
 using Random
 
-export AmbiguitySet, AmbiguitySetEstimator, BertsimasSet, BenTalSet, DelageSet, YangSet
+export AmbiguitySet, AmbiguitySetEstimator, BertsimasSet, BenTalSet, 
+    BoxNingNingSet, DelageSet, YangSet
 export BertsimasDataDrivenEstimator, DelageDataDrivenEstimator, estimate
 
 const ContinuousMultivariateSampleable = Sampleable{Multivariate, Continuous}
@@ -153,7 +154,7 @@ Atributes:
 References:
 - Delage paper on moment uncertainty (what I implemented): https://www.researchgate.net/publication/220244490_Distributionally_Robust_Optimization_Under_Moment_Uncertainty_with_Application_to_Data-Driven_Problems
 
-For more information on how BenTal uncertainty sets are used for RO, please review
+For more information on how Delage ambiguity sets are used for DRO, please review
 the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/PortfolioOptimization.jl/).
 """
 struct DelageSet{T<:Real, D<:ContinuousMultivariateSampleable} <: AmbiguitySet{T, D}
@@ -221,7 +222,7 @@ Atributes:
 References:
 - Li Yang paper on moment uncertainty and CVAR: https://www.hindawi.com/journals/jam/2014/784715/
 
-For more information on how BenTal uncertainty sets are used for RO, please review
+For more information on how Yang ambiguity sets are used for DRO, please review
 the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/PortfolioOptimization.jl/).
 """
 struct YangSet{T<:Real, D<:ContinuousMultivariateSampleable} <: AmbiguitySet{T, D}
@@ -267,6 +268,67 @@ function YangSet(
 end
 
 distribution(s::YangSet) = s.d
+
+"""
+    BoxNingNingSet <: AmbiguitySet
+
+```math
+\\left\\{ r  \\; \\middle| \\begin{array}{ll}
+s.t.  \\quad d_w(P, \\hat{P}_N) \\leq \\epsilon \\\\
+\\quad \\quad | \\xi_j | \\leq \\Lambda \\forall j = 1..m \\\\
+\\quad \\quad [\\xi; 0] + [0_{m x 1}; \\Lambda] \\in K \\\\
+\\quad \\quad K = {[\\omega, \\pi] \\in R^m x R: \\pi \\geq ||\\omega||_\\infty} \\\\
+\\end{array}
+\\right\\} \\\\
+```
+
+Atributes:
+- `d::ContinuousMultivariateSampleable`: Samples from the parent distribution
+- `ϵ::Float64`: Wasserstein distance from sampled distribution (has to be greater than 0). (default: 0.01)
+- `Λ::Float64`: Uncertainty around sampled values (has to be greater than 0). (default: maximum(std(d)))
+
+References:
+- NingNing paper on Wasserstein DRO (Corollary 1): https://ieeexplore.ieee.org/abstract/document/9311154
+
+For more information on how NingNing ambiguity sets are used for DRO, please review
+the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/PortfolioOptimization.jl/).
+"""
+struct BoxNingNingSet{T<:Real, D<:ContinuousMultivariateSampleable} <: AmbiguitySet{T, D}
+    d::D
+    ϵ::T
+    Λ::T
+
+    # Inner constructor for validating arguments
+    function BoxNingNingSet{T, D}(
+        d::D, ϵ::T, Λ::T
+    ) where {T<:Real, D<:ContinuousMultivariateSampleable}
+        ϵ >= 0 || throw(ArgumentError("ϵ must be >= 0"))
+        Λ >= 0 || throw(ArgumentError("Λ must be >= 0"))
+        return new{T, D}(d, ϵ, Λ)
+    end
+end
+
+# Default outer constructor
+function BoxNingNingSet(
+    d::D, ϵ::T, Λ::T
+) where {T<:Real, D<:ContinuousMultivariateSampleable}
+    BoxNingNingSet{T, D}(d, ϵ, Λ)
+end
+
+# Kwarg constructor with defaults
+function BoxNingNingSet(
+    d::ContinuousMultivariateSampleable;
+    ϵ=0.01,
+    Λ=default_BoxNingNingSet_lambda(d)
+)
+    return BoxNingNingSet(d, ϵ, Λ)
+end
+
+distribution(s::BoxNingNingSet) = s.d
+
+default_BoxNingNingSet_lambda(d::Sampleable; num_samples::Int=20, rng::AbstractRNG=MersenneTwister(123)) = maximum(
+    std(rand(rng, d, num_samples), dims=2)
+)
 
 include("AmbiguitySetEstimator.jl")
 

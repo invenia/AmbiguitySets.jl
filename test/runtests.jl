@@ -1,6 +1,8 @@
 using AmbiguitySets
 using Distributions
 using Random
+using StatsBase: aweights
+using StatsUtils: WeightedResampler
 using Test
 
 using AmbiguitySets:
@@ -117,6 +119,22 @@ using AmbiguitySets:
             )
         end
     end
+end
+
+@testset "BoxNingNingSet" begin
+    n = 10; n_obs = 100
+    d = WeightedResampler(rand(n, n_obs), aweights(ones(n_obs)))
+    s = BoxNingNingSet(d; ϵ=0.01)
+
+    @test length(s) == n
+    @test isa(s, Sampleable)
+    @test isa(s, AmbiguitySet)
+    @test rand(MersenneTwister(123), s) == rand(MersenneTwister(123), distribution(s))
+    @test s == BoxNingNingSet(d)
+
+    # Test constructor error cases
+    @test_throws ArgumentError BoxNingNingSet(d; ϵ=-0.01)
+    @test_throws ArgumentError BoxNingNingSet(d; Λ=-0.01)
 end
 
 @testset "AmbiguitySetEstimator.jl" begin
