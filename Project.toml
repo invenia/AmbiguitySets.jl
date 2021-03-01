@@ -1,7 +1,7 @@
 name = "AmbiguitySets"
 uuid = "39a6b01d-1fa7-42d9-8327-95e336cfebb5"
 authors = ["Invenia Technical Computing Corporation"]
-version = "0.1.6"
+version = "0.1.7"
 
 [deps]
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
@@ -13,7 +13,9 @@ Distributions = "0.18, 0.19, 0.20, 0.21, 0.22, 0.23, 0.24"
 julia = "1"
 
 [extras]
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+StatsUtils = "d94fc345-0ff4-56ba-a2b2-f5d62e4638cc"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test"]
+test = ["Test", "StatsUtils", "StatsBase"]
