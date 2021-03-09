@@ -5,8 +5,9 @@ using LinearAlgebra
 using Random
 
 export AmbiguitySet, AmbiguitySetEstimator, BertsimasSet, BenTalSet, 
-    BoxNingNingSet, DelageSet, YangSet
-export BertsimasDataDrivenEstimator, DelageDataDrivenEstimator, estimate
+    BoxDuSet, DelageSet, YangSet
+export BertsimasDataDrivenEstimator, BoxDuDataDrivenEstimator, DelageDataDrivenEstimator, 
+    estimate
 
 const ContinuousMultivariateSampleable = Sampleable{Multivariate, Continuous}
 
@@ -270,7 +271,7 @@ end
 distribution(s::YangSet) = s.d
 
 """
-    BoxNingNingSet <: AmbiguitySet
+    BoxDuSet <: AmbiguitySet
 
 ```math
 \\left\\{ r  \\; \\middle| \\begin{array}{ll}
@@ -293,13 +294,13 @@ References:
 For more information on how NingNing ambiguity sets are used for DRO, please review
 the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/PortfolioOptimization.jl/).
 """
-struct BoxNingNingSet{T<:Real, D<:ContinuousMultivariateSampleable} <: AmbiguitySet{T, D}
+struct BoxDuSet{T<:Real, D<:ContinuousMultivariateSampleable} <: AmbiguitySet{T, D}
     d::D
     ϵ::T
     Λ::T
 
     # Inner constructor for validating arguments
-    function BoxNingNingSet{T, D}(
+    function BoxDuSet{T, D}(
         d::D, ϵ::T, Λ::T
     ) where {T<:Real, D<:ContinuousMultivariateSampleable}
         ϵ >= 0 || throw(ArgumentError("ϵ must be >= 0"))
@@ -309,25 +310,25 @@ struct BoxNingNingSet{T<:Real, D<:ContinuousMultivariateSampleable} <: Ambiguity
 end
 
 # Default outer constructor
-function BoxNingNingSet(
+function BoxDuSet(
     d::D, ϵ::T, Λ::T
 ) where {T<:Real, D<:ContinuousMultivariateSampleable}
-    BoxNingNingSet{T, D}(d, ϵ, Λ)
+    BoxDuSet{T, D}(d, ϵ, Λ)
 end
 
 # Kwarg constructor with defaults
-function BoxNingNingSet(
+function BoxDuSet(
     d::ContinuousMultivariateSampleable;
     ϵ=0.01,
-    Λ=default_BoxNingNingSet_lambda(d)
+    Λ=default_BoxDuSet_lambda(d)
 )
-    return BoxNingNingSet(d, ϵ, Λ)
+    return BoxDuSet(d, ϵ, Λ)
 end
 
-distribution(s::BoxNingNingSet) = s.d
+distribution(s::BoxDuSet) = s.d
 
-default_BoxNingNingSet_lambda(d::Sampleable; num_samples::Int=20, rng::AbstractRNG=MersenneTwister(123)) = maximum(
-    std(rand(rng, d, num_samples), dims=2)
+default_BoxDuSet_lambda(d::Sampleable; num_samples::Int=20, rng::AbstractRNG=MersenneTwister(123)) = maximum(
+    rand(rng, d, num_samples)
 )
 
 include("AmbiguitySetEstimator.jl")

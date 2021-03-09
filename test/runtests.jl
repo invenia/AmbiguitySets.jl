@@ -121,20 +121,20 @@ using AmbiguitySets:
     end
 end
 
-@testset "BoxNingNingSet" begin
+@testset "BoxDuSet" begin
     n = 10; n_obs = 100
     d = WeightedResampler(rand(n, n_obs), aweights(ones(n_obs)))
-    s = BoxNingNingSet(d; ϵ=0.01)
+    s = BoxDuSet(d; ϵ=0.01)
 
     @test length(s) == n
     @test isa(s, Sampleable)
     @test isa(s, AmbiguitySet)
     @test rand(MersenneTwister(123), s) == rand(MersenneTwister(123), distribution(s))
-    @test s == BoxNingNingSet(d)
+    @test s == BoxDuSet(d)
 
     # Test constructor error cases
-    @test_throws ArgumentError BoxNingNingSet(d; ϵ=-0.01)
-    @test_throws ArgumentError BoxNingNingSet(d; Λ=-0.01)
+    @test_throws ArgumentError BoxDuSet(d; ϵ=-0.01)
+    @test_throws ArgumentError BoxDuSet(d; Λ=-0.01)
 end
 
 @testset "AmbiguitySetEstimator.jl" begin
@@ -157,5 +157,13 @@ end
     @testset "Delague Estimator" begin
         s = AmbiguitySets.estimate(DelageDataDrivenEstimator{DelageSet}(δ=0.025), d, data)
         @test isa(s, DelageSet)
+    end
+    @testset "BoxDu Estimator" begin
+        Λ_factor = 2.0
+        s = AmbiguitySets.estimate(
+            BoxDuDataDrivenEstimator{BoxDuSet}(Λ_factor=Λ_factor), d, data
+        )
+        @test isa(s, BoxDuSet)
+        @test s.Λ == Λ_factor * maximum(data)
     end
 end

@@ -98,3 +98,32 @@ function estimate(estimator::DelageDataDrivenEstimator{S, T}, d, ξ::Array{Float
 
     return S(d; γ1=γ1, γ2=γ2, kwargs...)
 end
+
+"""
+    BoxDuDataDrivenEstimator{S, T} <: AmbiguitySetEstimator{S}
+
+Parameter estimator for Bertsimas method
+"""
+struct BoxDuDataDrivenEstimator{S, T} <: AbstractAmbiguitySetEstimator{S}
+    Λ_factor::T
+    function BoxDuDataDrivenEstimator{S}(;
+        Λ_factor::T=1.0
+    ) where {S<:BoxDuSet, T<:Real}
+        1.0 <= Λ_factor || throw(ArgumentError("Λ_factor must be: 1 <= Δ_factor"))
+        return new{S, T}(Λ_factor)
+    end
+end
+
+"""
+    estimate(::Type{<:BoxDuDataDrivenEstimator{S}}, d, data; kwargs...) where {S<:BoxDuSet, T<:Real}
+
+Constructs an `BoxDuSet` by estimating appropriate parameters from the predictive distribution.
+
+Attributes:
+ - `d`: Predictive distribution.
+ - `data`: Raw samples. Not used.
+"""
+
+function estimate(estimator::BoxDuDataDrivenEstimator{S, T}, d, data::Array{Float64,2}; kwargs...)::S where {S<:BoxDuSet, T<:Real}
+    return S(d; Λ=estimator.Λ_factor*maximum(data), kwargs...)
+end
