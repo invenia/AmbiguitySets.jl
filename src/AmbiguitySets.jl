@@ -189,12 +189,12 @@ end
 # Kwarg constructor with defaults
 function DelageSet(
     d::AbstractMvNormal;
-    γ1=default_delage_γ1(d), γ2=3.0, coefficients=[1.0], intercepts=[0.0],
+    γ1=default_DelageSet_γ1(d), γ2=3.0, coefficients=[1.0], intercepts=[0.0],
 )
     return DelageSet(d, γ1, γ2, coefficients, intercepts)
 end
 
-default_delage_γ1(d::AbstractMvNormal) = first(sqrt.(var(d)) ./ 5)
+default_DelageSet_γ1(d::AbstractMvNormal) = first(sqrt.(var(d)) ./ 5)
 
 distribution(s::DelageSet) = s.d
 
@@ -262,7 +262,7 @@ end
 # Kwarg constructor with defaults
 function YangSet(
     d::AbstractMvNormal;
-    γ1=default_delage_γ1(d), γ2=3.0, 
+    γ1=default_DelageSet_γ1(d), γ2=3.0, 
     ξ̲=(mean(d) .- default_bertsimas_delta(d)), ξ̄=(mean(d) .+ default_bertsimas_delta(d))
 )
     return YangSet(d, γ1, γ2, ξ̲, ξ̄)
