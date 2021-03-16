@@ -327,7 +327,7 @@ function DuSet(
     ϵ=0.01,
     norm_cone=Inf,
     Λ=default_DuSet_lambda(d, norm_cone),
-    Q=diagm(ones(length(d)))
+    Q=I(length(d))
 )
     return DuSet(d, ϵ, Λ, Q, norm_cone)
 end
