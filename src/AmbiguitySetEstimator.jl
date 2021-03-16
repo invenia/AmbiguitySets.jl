@@ -100,30 +100,64 @@ function estimate(estimator::DelageDataDrivenEstimator{S, T}, d, ξ::Array{Float
 end
 
 """
-    BoxDuDataDrivenEstimator{S, T} <: AmbiguitySetEstimator{S}
+    YangDataDrivenEstimator{S, T} <: AmbiguitySetEstimator{S}
 
-Parameter estimator for Bertsimas method
+Parameter estimator for Yang method
 """
-struct BoxDuDataDrivenEstimator{S, T} <: AbstractAmbiguitySetEstimator{S}
-    Λ_factor::T
-    function BoxDuDataDrivenEstimator{S}(;
-        Λ_factor::T=1.0
-    ) where {S<:BoxDuSet, T<:Real}
-        1.0 <= Λ_factor || throw(ArgumentError("Λ_factor must be: 1 <= Δ_factor"))
-        return new{S, T}(Λ_factor)
+struct YangDataDrivenEstimator{S, T} <: AbstractAmbiguitySetEstimator{S}
+    Δ_factor::T
+    function YangDataDrivenEstimator{S}(;
+        Δ_factor::T=0.2,
+    ) where {S<:YangSet, T<:Real}
+        0.0 <= Δ_factor || throw(ArgumentError("Δ_factor must be: 0 <= Δ_factor"))
+        return new{S, T}(Δ_factor)
     end
 end
 
 """
-    estimate(::Type{<:BoxDuDataDrivenEstimator{S}}, d, data; kwargs...) where {S<:BoxDuSet, T<:Real}
+    estimate(::Type{<:YangDataDrivenEstimator{S}}, d, data; kwargs...) where {S<:YangSet, T<:Real}
 
-Constructs an `BoxDuSet` by estimating appropriate parameters from the predictive distribution.
+Constructs an `YangSet` by estimating appropriate parameters from the predictive distribution.
 
 Attributes:
  - `d`: Predictive distribution.
  - `data`: Raw samples. Not used.
 """
 
-function estimate(estimator::BoxDuDataDrivenEstimator{S, T}, d, data::Array{Float64,2}; kwargs...)::S where {S<:BoxDuSet, T<:Real}
-    return S(d; Λ=estimator.Λ_factor*maximum(data), kwargs...)
+function estimate(estimator::YangDataDrivenEstimator{S, T}, d, data::Array{Float64,2}; kwargs...)::S where {S<:YangSet, T<:Real}
+    deviation = estimator.Δ_factor*sqrt.(var(d))
+    return S(d; ξ̲=(mean(d) .- deviation), ξ̄=(mean(d) .+ deviation), kwargs...)
+end
+
+"""
+    DuDataDrivenEstimator{S, T} <: AmbiguitySetEstimator{S}
+
+Parameter estimator for Du method
+"""
+struct DuDataDrivenEstimator{S, T} <: AbstractAmbiguitySetEstimator{S}
+    Λ_factor::T
+    norm_cone::T
+    function DuDataDrivenEstimator{S}(;
+        Λ_factor::T=1.0,
+        norm_cone::T
+    ) where {S<:DuSet, T<:Real}
+        1.0 <= Λ_factor || throw(ArgumentError("Λ_factor must be: 1 <= Δ_factor"))
+        return new{S, T}(Λ_factor, norm_cone)
+    end
+end
+
+"""
+    estimate(::Type{<:DuDataDrivenEstimator{S}}, d, data; kwargs...) where {S<:DuSet, T<:Real}
+
+Constructs an `DuSet` by estimating appropriate parameters from the predictive distribution.
+
+Attributes:
+ - `d`: Predictive distribution.
+ - `data`: Raw samples. Not used.
+"""
+
+function estimate(estimator::DuDataDrivenEstimator{S, T}, d, data::Array{Float64,2}; kwargs...)::S where {S<:DuSet, T<:Real}
+    return S(d; Λ=estimator.Λ_factor*maximum(norm.(eachrow(data), estimator.norm_cone)), 
+        Q=diagm(sqrt.(var(d))), norm_cone=estimator.norm_cone, kwargs...
+    )
 end

@@ -5,9 +5,9 @@ using LinearAlgebra
 using Random
 
 export AmbiguitySet, AmbiguitySetEstimator, BertsimasSet, BenTalSet, 
-    BoxDuSet, DelageSet, YangSet
-export BertsimasDataDrivenEstimator, BoxDuDataDrivenEstimator, DelageDataDrivenEstimator, 
-    estimate
+    DuSet, DelageSet, YangSet
+export BertsimasDataDrivenEstimator, DuDataDrivenEstimator, DelageDataDrivenEstimator, 
+    estimate, YangDataDrivenEstimator
 
 const ContinuousMultivariateSampleable = Sampleable{Multivariate, Continuous}
 
@@ -189,12 +189,12 @@ end
 # Kwarg constructor with defaults
 function DelageSet(
     d::AbstractMvNormal;
-    γ1=default_delague_γ1(d), γ2=3.0, coefficients=[1.0], intercepts=[0.0],
+    γ1=default_DelageSet_γ1(d), γ2=3.0, coefficients=[1.0], intercepts=[0.0],
 )
     return DelageSet(d, γ1, γ2, coefficients, intercepts)
 end
 
-default_delague_γ1(d::AbstractMvNormal) = first(sqrt.(var(d)) ./ 5)
+default_DelageSet_γ1(d::AbstractMvNormal) = first(sqrt.(var(d)) ./ 5)
 
 distribution(s::DelageSet) = s.d
 
@@ -262,7 +262,7 @@ end
 # Kwarg constructor with defaults
 function YangSet(
     d::AbstractMvNormal;
-    γ1=default_delague_γ1(d), γ2=3.0, 
+    γ1=default_DelageSet_γ1(d), γ2=3.0, 
     ξ̲=(mean(d) .- default_bertsimas_delta(d)), ξ̄=(mean(d) .+ default_bertsimas_delta(d))
 )
     return YangSet(d, γ1, γ2, ξ̲, ξ̄)
@@ -271,14 +271,14 @@ end
 distribution(s::YangSet) = s.d
 
 """
-    BoxDuSet <: AmbiguitySet
+    DuSet <: AmbiguitySet
 
 ```math
 \\left\\{ r  \\; \\middle| \\begin{array}{ll}
 s.t.  \\quad d_w(P, \\hat{P}_N) \\leq \\epsilon \\\\
-\\quad \\quad | \\xi_j | \\leq \\Lambda \\forall j = 1..m \\\\
+\\quad \\quad || \\xi || \\leq \\Lambda \\\\
 \\quad \\quad [\\xi; 0] + [0_{m x 1}; \\Lambda] \\in K \\\\
-\\quad \\quad K = {[\\omega, \\pi] \\in R^m x R: \\pi \\geq ||\\omega||_\\infty} \\\\
+\\quad \\quad K = {[\\omega, \\pi] \\in R^m x R: \\pi \\geq ||\\omega||^*} \\\\
 \\end{array}
 \\right\\} \\\\
 ```
@@ -289,46 +289,53 @@ Atributes:
 - `Λ::Float64`: Uncertainty around sampled values (has to be greater than 0). (default: maximum(std(d)))
 
 References:
-- NingNing paper on Wasserstein DRO (Corollary 1): https://ieeexplore.ieee.org/abstract/document/9311154
+- NingNing paper on Wasserstein DRO (Corollary 1-3): https://ieeexplore.ieee.org/abstract/document/9311154
 
 For more information on how NingNing ambiguity sets are used for DRO, please review
 the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/PortfolioOptimization.jl/).
 """
-struct BoxDuSet{T<:Real, D<:ContinuousMultivariateSampleable} <: AmbiguitySet{T, D}
+struct DuSet{T<:Real, D<:ContinuousMultivariateSampleable} <: AmbiguitySet{T, D}
     d::D
     ϵ::T
     Λ::T
+    Q::Array{T,2}
+    norm_cone::Real
 
     # Inner constructor for validating arguments
-    function BoxDuSet{T, D}(
-        d::D, ϵ::T, Λ::T
+    function DuSet{T, D}(
+        d::D, ϵ::T, Λ::T, Q::Array{T,2}, norm_cone::Real
     ) where {T<:Real, D<:ContinuousMultivariateSampleable}
+        length(d) == size(Q,1) == size(Q,2) || throw(ArgumentError(
+            "Distribution ($(length(d))) and Q ($(size(Q,2))) must have coherent dimensions (m and mxm)"
+        ))
         ϵ >= 0 || throw(ArgumentError("ϵ must be >= 0"))
         Λ >= 0 || throw(ArgumentError("Λ must be >= 0"))
-        return new{T, D}(d, ϵ, Λ)
+        return new{T, D}(d, ϵ, Λ, Q, norm_cone)
     end
 end
 
 # Default outer constructor
-function BoxDuSet(
-    d::D, ϵ::T, Λ::T
+function DuSet(
+    d::D, ϵ::T, Λ::T, Q::Array{T,2}, norm_cone::Real
 ) where {T<:Real, D<:ContinuousMultivariateSampleable}
-    BoxDuSet{T, D}(d, ϵ, Λ)
+    DuSet{T, D}(d, ϵ, Λ, Q, norm_cone)
 end
 
 # Kwarg constructor with defaults
-function BoxDuSet(
+function DuSet(
     d::ContinuousMultivariateSampleable;
     ϵ=0.01,
-    Λ=default_BoxDuSet_lambda(d)
+    norm_cone=Inf,
+    Λ=default_DuSet_lambda(d, norm_cone),
+    Q=Matrix(I(length(d))* 1.0)
 )
-    return BoxDuSet(d, ϵ, Λ)
+    return DuSet(d, ϵ, Λ, Q, norm_cone)
 end
 
-distribution(s::BoxDuSet) = s.d
+distribution(s::DuSet) = s.d
 
-default_BoxDuSet_lambda(d::Sampleable; num_samples::Int=20, rng::AbstractRNG=MersenneTwister(123)) = maximum(
-    rand(rng, d, num_samples)
+default_DuSet_lambda(d::Sampleable, norm_cone::Real; num_samples::Int=20, rng::AbstractRNG=MersenneTwister(123)) = maximum(
+    norm.(eachrow(rand(rng, d, num_samples)), norm_cone)
 )
 
 include("AmbiguitySetEstimator.jl")
