@@ -121,20 +121,21 @@ using AmbiguitySets:
     end
 end
 
-@testset "BoxDuSet" begin
+@testset "DuSet" begin
     n = 10; n_obs = 100
     d = WeightedResampler(rand(n, n_obs), aweights(ones(n_obs)))
-    s = BoxDuSet(d; ϵ=0.01)
+    s = DuSet(d; ϵ=0.01)
 
     @test length(s) == n
     @test isa(s, Sampleable)
     @test isa(s, AmbiguitySet)
     @test rand(MersenneTwister(123), s) == rand(MersenneTwister(123), distribution(s))
-    @test s == BoxDuSet(d)
+    @test s == DuSet(d)
 
     # Test constructor error cases
-    @test_throws ArgumentError BoxDuSet(d; ϵ=-0.01)
-    @test_throws ArgumentError BoxDuSet(d; Λ=-0.01)
+    @test_throws ArgumentError DuSet(d; ϵ=-0.01)
+    @test_throws ArgumentError DuSet(d; Λ=-0.01)
+    @test_throws ArgumentError DuSet(d; Q=rand(n+1,n))
 end
 
 @testset "AmbiguitySetEstimator.jl" begin
@@ -154,16 +155,20 @@ end
         )
         @test isa(s, BertsimasSet)
     end
-    @testset "Delague Estimator" begin
+    @testset "Delage Estimator" begin
         s = AmbiguitySets.estimate(DelageDataDrivenEstimator{DelageSet}(δ=0.025), d, data)
         @test isa(s, DelageSet)
     end
-    @testset "BoxDu Estimator" begin
+    @testset "Yang Estimator" begin
+        s = AmbiguitySets.estimate(YangDataDrivenEstimator{YangSet}(Δ_factor=1.0), d, data)
+        @test isa(s, YangSet)
+    end
+    @testset "Du Estimator" begin
         Λ_factor = 2.0
         s = AmbiguitySets.estimate(
-            BoxDuDataDrivenEstimator{BoxDuSet}(Λ_factor=Λ_factor), d, data
+            DuDataDrivenEstimator{DuSet}(Λ_factor=Λ_factor, norm_cone=Inf), d, data
         )
-        @test isa(s, BoxDuSet)
-        @test s.Λ == Λ_factor * maximum(data)
+        @test isa(s, DuSet)
+        @test s.Λ == Λ_factor * maximum(abs.(data))
     end
 end
