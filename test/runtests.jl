@@ -163,12 +163,21 @@ end
         s = AmbiguitySets.estimate(YangDataDrivenEstimator{YangSet}(Δ_factor=1.0), d, data)
         @test isa(s, YangSet)
     end
-    @testset "Du Estimator" begin
+
+    d = WeightedResampler(data', aweights(ones(M)))
+    @testset "BoxDu Estimator" begin
         Λ_factor = 2.0
         s = AmbiguitySets.estimate(
             DuDataDrivenEstimator{DuSet}(Λ_factor=Λ_factor, norm_cone=Inf), d, data
         )
         @test isa(s, DuSet)
         @test s.Λ == Λ_factor * maximum(abs.(data))
+    end
+    @testset "Generic Du Estimator" for norm_cone in [1.0; 2.0]
+        Λ_factor = 2.0
+        s = AmbiguitySets.estimate(
+            DuDataDrivenEstimator{DuSet}(Λ_factor=Λ_factor, norm_cone=norm_cone), d, data
+        )
+        @test isa(s, DuSet)
     end
 end
