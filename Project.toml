@@ -1,7 +1,7 @@
 name = "AmbiguitySets"
 uuid = "39a6b01d-1fa7-42d9-8327-95e336cfebb5"
 authors = ["Invenia Technical Computing Corporation"]
-version = "0.3.0"
+version = "0.3.1"
 
 [deps]
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
