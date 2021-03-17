@@ -141,7 +141,7 @@ struct DuDataDrivenEstimator{S, T} <: AbstractAmbiguitySetEstimator{S}
     function DuDataDrivenEstimator{S}(;
         Λ_factor::T=1.0,
         norm_cone::T=Inf,
-        Q_function::Function= norm_cone == Inf ? d -> Matrix(I(length(d))* 1.0) : d ->  diagm(sqrt.(var(d)))
+        Q_function::Function= norm_cone == Inf ? data -> Matrix(I(size(data, 2))* 1.0) : data ->  diagm(std(data; dims=1)[1,:])
     ) where {S<:DuSet, T<:Real}
         1.0 <= Λ_factor || throw(ArgumentError("Λ_factor must be: 1 <= Δ_factor"))
         return new{S, T}(Λ_factor, norm_cone, Q_function)
@@ -160,6 +160,6 @@ Attributes:
 
 function estimate(estimator::DuDataDrivenEstimator{S, T}, d, data::Array{Float64,2}; kwargs...)::S where {S<:DuSet, T<:Real}
     return S(d; Λ=estimator.Λ_factor*maximum(norm.(eachrow(data), estimator.norm_cone)), 
-        Q=estimator.Q_function(d), norm_cone=estimator.norm_cone, kwargs...
+        Q=estimator.Q_function(data), norm_cone=estimator.norm_cone, kwargs...
     )
 end
