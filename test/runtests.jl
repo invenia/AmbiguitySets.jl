@@ -1,5 +1,6 @@
 using AmbiguitySets
 using Distributions
+using LinearAlgebra
 using Random
 using StatsBase: aweights
 using StatsUtils: WeightedResampler
@@ -15,42 +16,42 @@ using AmbiguitySets:
 
 @testset "AmbiguitySets.jl" begin
     @testset "BertsimasSet" begin
-        s = BertsimasSet(MvNormal(10, 0.25); Δ=fill(0.05, 10), Γ=1.0)
+        s = BertsimasSet(MvNormal(Diagonal(fill(0.25^2, 10))); Δ=fill(0.05, 10), Γ=1.0)
 
         @test length(s) == 10
         @test rand(MersenneTwister(123), s) == rand(MersenneTwister(123), distribution(s))
         @test isa(s, Sampleable)
         @test isa(s, AmbiguitySet)
-        @test distribution(s) == MvNormal(10, 0.25)
-        @test s == BertsimasSet(MvNormal(10, 0.25))
+        @test distribution(s) == MvNormal(Diagonal(fill(0.25^2, 10)))
+        @test s == BertsimasSet(MvNormal(Diagonal(fill(0.25^2, 10))))
 
         # Test constructor error cases
-        @test_throws ArgumentError BertsimasSet(MvNormal(10, 0.25); Δ=fill(-0.05, 10))
-        @test_throws ArgumentError BertsimasSet(MvNormal(10, 0.25); Δ=fill(0.05, 9))
-        @test_throws ArgumentError BertsimasSet(MvNormal(10, 0.25); Δ=fill(0.05, 10), Γ=-1.0)
+        @test_throws ArgumentError BertsimasSet(MvNormal(Diagonal(fill(0.25^2, 10))); Δ=fill(-0.05, 10))
+        @test_throws ArgumentError BertsimasSet(MvNormal(Diagonal(fill(0.25^2, 10))); Δ=fill(0.05, 9))
+        @test_throws ArgumentError BertsimasSet(MvNormal(Diagonal(fill(0.25^2, 10))); Δ=fill(0.05, 10), Γ=-1.0)
         @test_logs(
             (:warn, "Budget should not exceed the distribution length"),
-            BertsimasSet(MvNormal(10, 0.25); Δ=fill(0.05, 10), Γ=11.0)
+            BertsimasSet(MvNormal(Diagonal(fill(0.25^2, 10))); Δ=fill(0.05, 10), Γ=11.0)
         )
     end
 
     @testset "BenTalSet" begin
-        s = BenTalSet(MvNormal(10, 0.25); Δ=0.025)
+        s = BenTalSet(MvNormal(Diagonal(fill(0.25^2, 10))); Δ=0.025)
 
         @test length(s) == 10
         @test rand(MersenneTwister(123), s) == rand(MersenneTwister(123), distribution(s))
         @test isa(s, Sampleable)
         @test isa(s, AmbiguitySet)
-        @test distribution(s) == MvNormal(10, 0.25)
-        @test s == BenTalSet(MvNormal(10, 0.25))
+        @test distribution(s) == MvNormal(Diagonal(fill(0.25^2, 10)))
+        @test s == BenTalSet(MvNormal(Diagonal(fill(0.25^2, 10))))
 
         # Test constructor error cases
-        @test_throws ArgumentError BenTalSet(MvNormal(10, 0.25); Δ=-0.5)
+        @test_throws ArgumentError BenTalSet(MvNormal(Diagonal(fill(0.25^2, 10))); Δ=-0.5)
     end
 
     @testset "$S" for S in [DelageSet; YangSet]
         s = S(
-            MvNormal(10, 0.25);
+            MvNormal(Diagonal(fill(0.25^2, 10)));
             γ1=0.05,
             γ2=3.0,
         )
@@ -59,25 +60,25 @@ using AmbiguitySets:
         @test rand(MersenneTwister(123), s) == rand(MersenneTwister(123), distribution(s))
         @test isa(s, Sampleable)
         @test isa(s, AmbiguitySet)
-        @test distribution(s) == MvNormal(10, 0.25)
-        @test s == S(MvNormal(10, 0.25))
+        @test distribution(s) == MvNormal(Diagonal(fill(0.25^2, 10)))
+        @test s == S(MvNormal(Diagonal(fill(0.25^2, 10))))
 
         # Test constructor error cases
         @test_throws ArgumentError S(
-            MvNormal(10, 0.25);
+            MvNormal(Diagonal(fill(0.25^2, 10)));
             γ1=-0.05,
             γ2=3.0,
         )
 
         @test_throws ArgumentError S(
-            MvNormal(10, 0.25);
+            MvNormal(Diagonal(fill(0.25^2, 10)));
             γ1=0.05,
             γ2=0.5,
         )
 
         if S === DelageSet
             @test_throws ArgumentError S(
-                MvNormal(10, 0.25);
+                MvNormal(Diagonal(fill(0.25^2, 10)));
                 γ1=0.05,
                 γ2=3.0,
                 coefficients=[1.0, 0.2],
@@ -85,7 +86,7 @@ using AmbiguitySets:
             )
         end
         if S === YangSet
-            d = MvNormal(10, 0.25)
+            d = MvNormal(Diagonal(fill(0.25^2, 10)))
             @test_throws ArgumentError S(
                 d;
                 γ1=0.05,
@@ -143,7 +144,7 @@ end
     M = 100000
     seed = 4444
     rng = MersenneTwister(seed)
-    d = MvNormal(n, 0.25)
+    d = MvNormal(Diagonal(fill(0.25^2, n)))
     data = Matrix(transpose(rand(rng, d, M)))
     @testset "Abstract Estimator: $S" for S in [BertsimasSet, BenTalSet, DelageSet]
         s = AmbiguitySets.estimate(AmbiguitySetEstimator{S}(), d, rand(M, n))

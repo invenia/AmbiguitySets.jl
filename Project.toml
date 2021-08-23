@@ -1,7 +1,7 @@
 name = "AmbiguitySets"
 uuid = "39a6b01d-1fa7-42d9-8327-95e336cfebb5"
 authors = ["Invenia Technical Computing Corporation"]
-version = "0.3.2"
+version = "0.3.3"
 
 [deps]
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
@@ -9,7 +9,7 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [compat]
-Distributions = "0.18, 0.19, 0.20, 0.21, 0.22, 0.23, 0.24"
+Distributions = "0.18, 0.19, 0.20, 0.21, 0.22, 0.23, 0.24, 0.25"
 julia = "1"
 
 [extras]
