@@ -76,7 +76,7 @@ Attributes:
 """
 function estimate(estimator::DelageDataDrivenEstimator{S, T}, d, ξ::Array{Float64,2}; kwargs...)::S where {S<:DelageSet, T<:Real} 
     δ = estimator.δ
-    means = Distributions.mean(d)
+    means = Vector(Distributions.mean(d))
     m = length(means)
     inv_sqrt_cov = inv(Matrix(sqrt(cov(d))))
     M = size(ξ,1)
@@ -126,7 +126,7 @@ Attributes:
 
 function estimate(estimator::YangDataDrivenEstimator{S, T}, d, data::Array{Float64,2}; kwargs...)::S where {S<:YangSet, T<:Real}
     deviation = estimator.Δ_factor*sqrt.(var(d))
-    return S(d; ξ̲=(mean(d) .- deviation), ξ̄=(mean(d) .+ deviation), kwargs...)
+    return S(d; ξ̲=Vector(mean(d) .- deviation), ξ̄=Vector(mean(d) .+ deviation), kwargs...)
 end
 
 """
