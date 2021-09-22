@@ -243,7 +243,7 @@ struct YangSet{T<:Real, D<:ContinuousMultivariateSampleable} <: AmbiguitySet{T, 
         length(d) == length(ξ̲) || throw(ArgumentError(
             "Distribution ($(length(d))) and ξ̄ ($(length(ξ̲))) are not the same length"
         ))
-        means = mean(d)
+        means = Vector(mean(d))
         all(ξ̄ .>= means) || throw(ArgumentError("ξ̄ must be >= mean(d)"))
         all(ξ̲ .<= means) || throw(ArgumentError("ξ̲ must be <= mean(d)"))
         γ1 >= 0 || throw(ArgumentError("γ1 must be >= 0"))
@@ -263,7 +263,7 @@ end
 function YangSet(
     d::AbstractMvNormal;
     γ1=default_DelageSet_γ1(d), γ2=3.0, 
-    ξ̲=(mean(d) .- default_bertsimas_delta(d)), ξ̄=(mean(d) .+ default_bertsimas_delta(d))
+    ξ̲=(Vector(mean(d)) .- default_bertsimas_delta(d)), ξ̄=(Vector(mean(d)) .+ default_bertsimas_delta(d))
 )
     return YangSet(d, γ1, γ2, ξ̲, ξ̄)
 end
