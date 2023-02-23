@@ -1,6 +1,5 @@
 # AmbiguitySets.jl
 
-[![Docs: Latest](https://img.shields.io/badge/docs-latest-blue.svg)](http://docs.invenia.ca/invenia/research/AmbiguitySets.jl)
 
 A minimal package of ambiguity set type definitions for use in
 [AmbiguitySetForecasters.jl](https://gitlab.invenia.ca/invenia/research/AmbiguitySetForecasters.jl) and
