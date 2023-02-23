@@ -19,7 +19,7 @@ Robust Optimization (RO) and Distributionally Robust Optimization (DRO) problems
 It represents a bounded infinite set of distributions.
 
 For more information on how `AmbiguitySet`s are used for RO and DRO, please review
-the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/PortfolioOptimization.jl/).
+the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/learned-strategies/PortfolioOptimization.jl/).
 """
 abstract type AmbiguitySet{T<:Real, D<:ContinuousMultivariateSampleable} <: ContinuousMultivariateSampleable end
 
@@ -58,7 +58,7 @@ References:
 - Bertsimas, D. e Sim, M. (2004). The price of robustness. Operations research, 52(1):35–53.
 
 For more information on how Bertsimas' uncertainty sets are used for RO, please review
-the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/PortfolioOptimization.jl/).
+the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/learned-strategies/PortfolioOptimization.jl/).
 """
 struct BertsimasSet{T<:Real, D<:ContinuousMultivariateSampleable} <: AmbiguitySet{T, D}
     d::D
@@ -113,7 +113,7 @@ References:
 - Ben-Tal, A. e Nemirovski, A. (2000). Robust solutions of linear programming problems contaminated with uncertain data. Mathematical programming, 88(3):411–424.
 
 For more information on how BenTal uncertainty sets are used for RO, please review
-the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/PortfolioOptimization.jl/).
+the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/learned-strategies/PortfolioOptimization.jl/).
 """
 struct BenTalSet{T<:Real, D<:ContinuousMultivariateSampleable} <: AmbiguitySet{T, D}
     d::D
@@ -156,7 +156,7 @@ References:
 - Delage paper on moment uncertainty (what I implemented): https://www.researchgate.net/publication/220244490_Distributionally_Robust_Optimization_Under_Moment_Uncertainty_with_Application_to_Data-Driven_Problems
 
 For more information on how Delage ambiguity sets are used for DRO, please review
-the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/PortfolioOptimization.jl/).
+the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/learned-strategies/PortfolioOptimization.jl/).
 """
 struct DelageSet{T<:Real, D<:ContinuousMultivariateSampleable} <: AmbiguitySet{T, D}
     d::D
@@ -224,7 +224,7 @@ References:
 - Li Yang paper on moment uncertainty and CVAR: https://www.hindawi.com/journals/jam/2014/784715/
 
 For more information on how Yang ambiguity sets are used for DRO, please review
-the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/PortfolioOptimization.jl/).
+the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/learned-strategies/PortfolioOptimization.jl/).
 """
 struct YangSet{T<:Real, D<:ContinuousMultivariateSampleable} <: AmbiguitySet{T, D}
     d::D
@@ -292,7 +292,7 @@ References:
 - NingNing paper on Wasserstein DRO (Corollary 1-3): https://ieeexplore.ieee.org/abstract/document/9311154
 
 For more information on how NingNing ambiguity sets are used for DRO, please review
-the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/PortfolioOptimization.jl/).
+the PortfolioOptimization.jl [docs](https://invenia.pages.invenia.ca/learned-strategies/PortfolioOptimization.jl/).
 """
 struct DuSet{T<:Real, D<:ContinuousMultivariateSampleable} <: AmbiguitySet{T, D}
     d::D
